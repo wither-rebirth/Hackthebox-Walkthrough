@@ -1,4 +1,4 @@
-1, Recon
+d1, Recon
 port scan 
 	22/tcp ssh
 	80/tcp http `redirect to http://caption.htb`
@@ -83,6 +83,23 @@ tcp6       0      0 :::22                   :::*                    LISTEN      
 
 `127.0.0.1:8000` is the `[Caption-Portal]` application
 `127.0.0.1:9090` is the `[Logservice]` application
+
+```
+- func main() {
+-     handler := &LogServiceHandler{}
+-     processor := log_service.NewLogServiceProcessor(handler)
+-     transport, err := thrift.NewTServerSocket(":9090")
+-     if err != nil {
+-         log.Fatalf("Error creating transport: %v", err)
+-     }
+
+-     server := thrift.NewTSimpleServer4(processor, transport, thrift.NewTTransportFactory(), thrift.NewTBinaryProtocolFactoryDefault())
+-     log.Println("Starting the server...")
+-     if err := server.Serve(); err != nil {
+-         log.Fatalf("Error occurred while serving: %v", err)
+-     }
+- }
+```
 
 So if we want to check it, we need to Port forwarding
 `ssh -i id_rsa margo@10.10.11.33 -L 9090:localhost:9090`
