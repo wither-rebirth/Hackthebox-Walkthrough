@@ -14,42 +14,42 @@ exited domain and sub-domain
 1. `http://delivery.htb:8065/login` # `Mattermost` There is a login page to the dashboard.
 
 This is an instance of osTicket:
-![[Pasted image 20240831105618.png]]
+![](images/Pasted%20image%2020240831105618.png)
 
 As a guest user, I can create a ticket:
-![[Pasted image 20240831105632.png]]
+![](images/Pasted%20image%2020240831105632.png)
 
 And it will give me a page saying it’s been accepted:
-![[Pasted image 20240831105644.png]]
+![](images/Pasted%20image%2020240831105644.png)
 
 The email to add to the ticket is interesting. I’ll note that.
 
 The Sign In link has a form, as well as a registration link:
-![[Pasted image 20240831105705.png]]
+![](images/Pasted%20image%2020240831105705.png)
 
 On clicking “Create an account” and filling out the form, it gives me a page that says a link has been sent to the email to activate it. On HTB, that’s basically a deadend. If I try to log in, it returns this error:
-![[Pasted image 20240831105718.png]]
+![](images/Pasted%20image%2020240831105718.png)
 If I click the Check Ticket Status link, it asks for an email or ticket number. Because no validation was done of my email when submitting a ticket as a Guest User, I can enter that email and ticket number:
 
-![[Pasted image 20240831105731.png]]
+![](images/Pasted%20image%2020240831105731.png)
 
 This page gives the current ticket, with the option to update it:
-![[Pasted image 20240831105743.png]]
+![](images/Pasted%20image%2020240831105743.png)
 
 delivery.htb - TCP 8065
 The main page here is a login form:
-![[Pasted image 20240831105810.png]]
+![](images/Pasted%20image%2020240831105810.png)
 
 The create account link leads to another form:
 
-![[Pasted image 20240831105822.png]]
+![](images/Pasted%20image%2020240831105822.png)
 
 Submitting also leads to an email confirmation step:
-![[Pasted image 20240831105832.png]]
+![](images/Pasted%20image%2020240831105832.png)
 Without an email address, not much I can do here.
 
 In this place, I would try to use the helper contact email, then we can successfully login to the chat group:
-![[Pasted image 20240831105958.png]]
+![](images/Pasted%20image%2020240831105958.png)
 
 And also, we get the credits
 `maildeliverer:Youve_G0t_Mail!`

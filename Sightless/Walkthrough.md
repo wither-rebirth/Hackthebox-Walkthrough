@@ -6,7 +6,7 @@ port scan
 Check the services
 	ftp: very sad, we could not use anonymous to login.
 	http: we find other sub-domains `sqlpad.sightless.htb`, and we did not find anything useful in the main domain.And we successfully find the version of sqlpad
-	![[Pasted image 20240908101649.png]]
+	![](images/Pasted%20image%2020240908101649.png)
 	`sqlpad 6.10.0`
 	Let's check some exploits of that
 	`sqlpad up to 6.10.0 Test Endpoint injection`
@@ -57,7 +57,7 @@ So let's Port forwarding it to our localhost.
 `ssh -L 8080:localhost:8080 michael@10.10.11.32`
 
 Then we just check `http://localhost:8080`, we get 
-![[Pasted image 20240908110234.png]]
+![](images/Pasted%20image%2020240908110234.png)
 We get the name of service `froxlor` and we need to add the domain
 ```
 michael@sightless:~$ cat /etc/hosts
@@ -66,7 +66,7 @@ michael@sightless:~$ cat /etc/hosts
 127.0.0.1 sightless.htb sqlpad.sightless.htb admin.sightless.htb
 ```
 Then  we successfully come to the login page
-![[Pasted image 20240908110618.png]]
+![](images/Pasted%20image%2020240908110618.png)
 So let's try to use the cred `michael:insaneclownposse`, but we failed
 
 So let's come to the machine and we find another user `john` and we don't have permission to check its directory.
@@ -103,7 +103,7 @@ add them all until you see a connection pop up > inspect it > new window pops up
 
 Then we can get the credit
 In the payload tab, we can catch the credit of admin.
-![[Pasted image 20240909085129.png]]
+![](images/Pasted%20image%2020240909085129.png)
 `admin : ForlorfroxAdmin`
 
 There is a tricky way to get the root.txt

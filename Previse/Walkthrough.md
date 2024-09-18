@@ -31,7 +31,7 @@ Yes!!!!, we see the exec, so we get command injection and let's exploit it!
 By using the burp to catch the POST request and just change it and check the response.
 `delim=users;ping -c 1 10.10.16.11 
 Then we need to check the tcpdump or wireshark:
-![[Pasted image 20240806110542.png]]
+![](images/Pasted%20image%2020240806110542.png)
 ICMP package means we successfully exploit command injection.
 
 So let's get the shell!!!!!

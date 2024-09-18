@@ -39,7 +39,7 @@ For vNext
 
 and another login page
 `http://10.10.10.180/umbraco/#/login`
-![[Pasted image 20240914111230.png]]
+![](Pasted%20image%2020240914111230.png)
 
 `Wappalyzer` give us some information of this page, it is powered by `Umbraco` 
 And from the source page we find
@@ -49,7 +49,7 @@ By checking the exploit-db, we find something funny
 So we need to come back to the todo-list, and find the credit.
 
 When we check some not-found page, it would not be 404 page
-![[Pasted image 20240914112003.png]]
+![](Pasted%20image%2020240914112003.png)
 
 There is another port 2049 NSF would not be checked.
 ```
@@ -104,7 +104,7 @@ Then we can get the user shell
 
 3,Shell as SYSTEM
 By enumerate the `C:\Program Files` , There is no other 3-part application
-![[Pasted image 20240914115547.png]]
+![](Pasted%20image%2020240914115547.png)
 
 But there is another file `TeamViewer 7.lnk` in the `C:\Users\Public\Desktop`
 So this place, it would be a hint for us to find the `TeamViewer`

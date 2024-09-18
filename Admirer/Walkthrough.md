@@ -5,7 +5,7 @@ port scan
 	80/tcp http `Apache httpd 2.4.25 ((Debian))`
 	\
 directory scan 
-![[Pasted image 20240911042720.png]]In this place, we find something interesting from robots.txt
+![](images/Pasted%20image%2020240911042720.png)In this place, we find something interesting from robots.txt
 ```
 User-agent: *
 
@@ -128,19 +128,19 @@ We need to guess or find the `db_admin.php` in this web-service
 
 But very sadly, we could not login successfully.While I couldn’t get access to any database on Admirer, I could connect to one on my local machine. As this blog post lays out, that will still give local file access for whatever the www-data process can read from Admirer, using SQL like:
 
-![[Pasted image 20240911081659.png]]
+![](images/Pasted%20image%2020240911081659.png)
 
 I tried to read /etc/password and other files in /etc, but only got an error:
-![[Pasted image 20240911081719.png]]
+![](images/Pasted%20image%2020240911081719.png)
 
 But when I asked for /var/www/html/index.php, it reads 123 rows:
-![[Pasted image 20240911081730.png]]
+![](images/Pasted%20image%2020240911081730.png)
 
 Then we just need to run `select * from pwn.exfil;`
-![[Pasted image 20240911082858.png]]
+![](images/Pasted%20image%2020240911082858.png)
 
 The reason that I wasn’t able to log into the local database was that the creds on the live site are different from the ones in the FTP backup:
-![[Pasted image 20240911082942.png]]
+![](images/Pasted%20image%2020240911082942.png)
 
 We have get the ssh and ftp credit: `waldo:&<h5b~yK3F#{PaPB&dA}{H>` 
 

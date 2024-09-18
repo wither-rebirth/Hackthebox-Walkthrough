@@ -3,7 +3,7 @@
 This so tricky, only one port is open.
 
 And by basically enumerate we find the `/admin` the login page.
-![[Pasted image 20240910093858.png]]
+![](images/Pasted%20image%2020240910093858.png)
 Check all of them, only the `/admin` would be useful for us, but others could not find anything.
 
 we have get the version of this

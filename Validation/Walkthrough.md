@@ -7,7 +7,7 @@
 2, Check these websites
 port 80 :fuzz the web-content : but there is nothing useful for us
 port 4566 :it give us the code 403 forbidden, so we guess it need cookies or something.
-![[Pasted image 20240731024054.png]]
+![](images/Pasted%20image%2020240731024054.png)
 we have tried some existed user cookie, but it did not work.
 So this port would be especially for admin or manager.
 

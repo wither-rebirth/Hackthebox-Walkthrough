@@ -4,7 +4,7 @@
 
 By fuzzing the web-content, we can get many interesting urls.
 
-![[Pasted image 20240818095444.png]]
+![](images/Pasted%20image%2020240818095444.png)
 
 `/robots.txt  /web.config /xmlrpc.php /index.php'
 These urls would be useful for us.
@@ -155,7 +155,7 @@ fpm -n xxxx -s dir -t snap -a all meta
 Finally, I downloaded the snap using cURL and installed it.
 
 As you can see from the screenshot below, the snap was installed successfully. However, more importantly, it ran the command to change the ownership and permissions of the bash file. The file was now owned by root and had setuid set.
-![[Pasted image 20240818111718.png]]
+![](images/Pasted%20image%2020240818111718.png)
 
 `./bash -p`
 

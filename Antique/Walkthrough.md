@@ -16,7 +16,7 @@ https://www.exploit-db.com/exploits/22319
 Given the last of any other paths on TCP, I’ll check back to a UDP scan. Scanning for UDP can be both slow and unreliable. I do find -sV to make the results more reliable (and probably slower), but even just looking a the top ten ports finds something interesting on Antique:
 考虑到 TCP 上的最后一个其他路径，我将检查 UDP 扫描。扫描 UDP 可能既缓慢又不可靠。我确实发现 -sV 可以使结果更可靠（并且可能更慢），但即使只是查看前十个端口，也会在 Antique 上发现一些有趣的东西：
 
-![[Pasted image 20240723104024.png]]
+![](images/Pasted%20image%2020240723104024.png)
 There we can see snmp open !
 Let's exploit it.
 
@@ -24,7 +24,7 @@ Running snmpwalk on Antique will only return one entry:
 	`snmpwalk -v 2c -c public 10.10.11.107`
 
 these are hex representations of each byte. I’ll recognize that the numbers at the start of the list are in the hex ASCII range (0x20 - 0x7e), even if that ones at the end don’t make sense in that context.
-![[Pasted image 20240723104420.png]]
+![](images/Pasted%20image%2020240723104420.png)
 
 try to use python to convert it to ASCII code.
 

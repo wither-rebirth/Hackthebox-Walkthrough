@@ -8,7 +8,7 @@ In the original url `https://laboratory.htb/`, we could not find anything useful
 
 So let's come to `git.laboratory.htb`
 Let's just register account and login and we can find a project from exploration.
-![[Pasted image 20240902094754.png]]
+![](images/Pasted%20image%2020240902094754.png)
 
 Let's continue to enumerate the configs and source code.
 ```
@@ -29,16 +29,16 @@ And we can find the version of GitLab in the url `https://git.laboratory.htb/hel
 `# GitLab Community Edition [12.8.1]`
 `Gitlab 12.9.0 - Arbitrary File Read (Authenticated)`
 To exploit this vulnerability (CVE-2020-10977), I’ll need to create two projects:
-![[Pasted image 20240902101826.png]]
+![](images/Pasted%20image%2020240902101826.png)
 Then go into proj1 and create an issue with markdown language image reference where the image is a directory traversal payload pointing to the file I want:
 ```
 ![a](/uploads/11111111111111111111111111111111/../../../../../../../../../../../../../../etc/passwd)
 ```
 
 After submitting that, expand the menu on the right side, and at the bottom of it I’ll find “Move issue”, where I can select proj2:
-![[Pasted image 20240902101952.png]]
+![](images/Pasted%20image%2020240902101952.png)
 In the new issue, there’s a file linked at the top just under the issue name:
-![[Pasted image 20240902102004.png]]
+![](images/Pasted%20image%2020240902102004.png)
 Then we can get the password file.
 
 In searching for information about this exploit, I found this repo. The script is pretty slick:
@@ -137,7 +137,7 @@ user.save!
 ```
 
 We finally successfully login to the admin page and get the secret git project, and we can get the .ssh directory.
-![[Pasted image 20240906113909.png]]
+![](images/Pasted%20image%2020240906113909.png)
 
 Then use the id_rsa, we successfully login.
 

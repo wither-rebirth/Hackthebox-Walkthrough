@@ -9,7 +9,7 @@ The index page would redirect to `/login?next=%2F`
 I guess it would because of port 8089 is the main domain page.
 \
 Let's register an account and we can update the account information
-![[Pasted image 20240904044014.png]]
+![](images/Pasted%20image%2020240904044014.png)
 
 When we want to exchange to the admin ,we can find user admin is existed.
 

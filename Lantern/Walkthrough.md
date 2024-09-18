@@ -22,7 +22,7 @@ And when we find the exploit from exploit-db, we find the SSRF vulner.
 
 Then let's identifying vulnerabilities.
 The testing procedure is simple—add an specific header (X-Skipper-Proxy) to the http request. We can do it in BurpSuite:
-![[Pasted image 20240829092622.png]]
+![](images/Pasted%20image%2020240829092622.png)
 When we try a random port for example 9999, it returns “503 Service Unavailable"
 So, we have basically verified the SSRF primitive. Use a python script to enumerate common ports (We actually know that Blazor’s default port is 5000).
 
@@ -34,13 +34,13 @@ In the JSON response, except for all those framework-default files, there’s on
 "InternaLantern.dll": "sha256-pblWkC\/PhCCSxn1VOi3fajA0xS3mX\/\/RC0XvAE\/n5cI=
 ```
 Same step as we did in Blazorized box, copy the URL from Burp to browser, download the DLL file:
-![[Pasted image 20240829093323.png]]
+![](images/Pasted%20image%2020240829093323.png)
 
 Use dnSpy to decompile the file and it’s code review time (it’s basically the source code of the InternaLantern app). First I identified a database name as Data.db:
 
-![[Pasted image 20240829093353.png]]
+![](images/Pasted%20image%2020240829093353.png)
 
-![[Pasted image 20240829100949.png]]
+![](images/Pasted%20image%2020240829100949.png)
 
 There are 6 internal employees:
 ```
@@ -160,7 +160,7 @@ tomas:x:1000:1000:tomas:/home/tomas:/bin/bash
 ```
 
 Besides these, we can also find another command injection in the choose modulus
-![[Pasted image 20240829102853.png]]
+![](images/Pasted%20image%2020240829102853.png)
 
 The error seems telling us this endpoint is able to load/execute a DLL assembly under the path /opt/component.thecybersecguru.dll—when we provide the filename as thecybersecguru.
 
@@ -171,7 +171,7 @@ Therefore, if we can upload a malicious DLL to /opt/components/thecybersecguru.d
 The “Upload content” option in http://lantern.htb:3000 admin dashboard also suffers from path traversing. We can verify that by uploading an empty DLL file to our target path /opt/components.
 
 It means we can try to modify the file name to ../../../../opt/components/thecybersecguru.dll, using tools like BurpSuite intercepting the upload requests. But we are having an unusual situation for the Blazor Assembly application, which we hard to read the request body consisting of binaries:
-![[Pasted image 20240830082455.png]]
+![](images/Pasted%20image%2020240830082455.png)
 
 When we want to test with Blazor, all the messages transmitted by the application included seemingly random binary characters, that we have limited readability and the inability to tamper with data. So, we can use a MessagePack extension in BurpSuite to read the serialized body content. And we can use the extension called Blazor Traffic Processor (BTP) to capture the BlazorPack message in BurpSuite.
 
@@ -180,7 +180,7 @@ MessagePack is another serialization format used to package structured data, lik
 ```
 
 Now we can paste the binary to our intercepted request. Once we upload successfully, we can simply type thecybersecguru i.e. the filename in the “Choose module” option to verify the vulnerability:
-![[Pasted image 20240830082558.png]]
+![](images/Pasted%20image%2020240830082558.png)
 
 Although the DLL file is invalid, but we know it’s uploaded successfully and ready to be executed.
 
@@ -217,11 +217,11 @@ We will find the xpl.dll file under path /xpl_project/xpl/bin/release/net6.0.
 
 Now use the same method we did when verifying the RCE primitive, upload the xpl.dll and trigger it via the “Choose module” option, we are able to print the id_rsa for user tomas:
 
-![[Pasted image 20240830103102.png]]
+![](images/Pasted%20image%2020240830103102.png)
 
 Modify the permission to 600, we can use it the remote log on the machine as user tomas, and compromise the user flag:
 
-![[Pasted image 20240830103121.png]]
+![](images/Pasted%20image%2020240830103121.png)
 
 4,Lantern | Root
 
@@ -245,7 +245,7 @@ Best.
 
 The file /root/automation.sh is not readable but we can check SUDO privilege, which may relate to this script:
 
-![[Pasted image 20240830103330.png]]
+![](images/Pasted%20image%2020240830103330.png)
 
 ```
 Procmon is usually associated with the Windows tool Process Monitor, but in the context of Linux, it could refer to a different utility. On some Linux systems, procmon can be a custom or less common tool used for monitoring processes. In our case, it seems to be allowing us to trace a file, as root of course:
@@ -265,7 +265,7 @@ procmon [OPTIONS...]
 
 So we can look into current running processes. Run command `ps -aef`  to display information about the currently running processes, including all processes for all users, not just the current user with a “full” format listing:
 
-![[Pasted image 20240830103621.png]]
+![](images/Pasted%20image%2020240830103621.png)
 
 We found something interesting here. User root is somehow editing the suspicious file /root/automation.sh. Once we are able to write some malicious content into it, we may compromise the root user.
 
@@ -274,31 +274,31 @@ Mark down the PID (quickly, the PID is changing according to my observation) of 
 
 Wait for a few minutes, long enough for the program to write sufficient data, Press F6 to export logs and F9 to exit:
 
-![[Pasted image 20240830110141.png]]
+![](images/Pasted%20image%2020240830110141.png)
 
 Copy the exported DB file and we can identify that it’s in SQLite format:
 `scp -i id_rsa tomas@lantern.htb:/home/tomas/procmon_2024-08-30_14:42:03.db .`
 
-![[Pasted image 20240830110226.png]]
+![](images/Pasted%20image%2020240830110226.png)
 
 Looking into the DB file, the ebpf table records something interesting:
 
-![[Pasted image 20240830110239.png]]
+![](images/Pasted%20image%2020240830110239.png)
 
 We can check the column names first to understand what it’s about with query PRAGMA table_info(ebpf);:
 
-![[Pasted image 20240830110254.png]]
+![](images/Pasted%20image%2020240830110254.png)
 
 Comparing the data and the column names, we can the the Procmon is telling us that the Glibc had been calling the write syscall for the process.
 `ssize_t write(int fd, const void *buf, size_t count);`
 
 If we press F8 during the process running we can see the runtime details:
-![[Pasted image 20240830110329.png]]
+![](images/Pasted%20image%2020240830110329.png)
 
 For the column resultcode typically represents the return value of a system call or event. It possibly indicates (I guess) the outcome of the operation. Normally 0 means success that the system call completed without errors. While Error codes like -1 for a generic error). And a positive resultcode might indicate a special type of success that includes additional information (e.g., a file descriptor number, bytes written, etc.).
 
 Most importantly, there’s the last column arguments which we can not see in the screen output! Because they are BLOB (binary object), which can be some interesting data it’s recording:
-![[Pasted image 20240830110358.png]]
+![](images/Pasted%20image%2020240830110358.png)
 
 Thus, we can look up those BLOB data to see if there’s something interesting for what the root user keeps writing. Use .output output.txt to output specific data following by the next SQLite command:
 
@@ -313,14 +313,14 @@ The query is extracting and converting data from the arguments column in the ebp
 The data is extracted starting from the 9th character of the arguments column, and the length of the extracted substring is determined by the value in the resultcode column.
 
 The extracted substring is then converted to a hexadecimal format:
-![[Pasted image 20240830110455.png]]
+![](images/Pasted%20image%2020240830110455.png)
 
 Now we have the output.txt containing the hexadecimal format of the buffer data. Uploading the file to Cyberchef and unhexing it with the “From hex” recipe:
-![[Pasted image 20240830110514.png]]
+![](images/Pasted%20image%2020240830110514.png)
 
 The output indicates that the hex values represent non-printable characters (such as control characters), which are displayed as special symbols above.
 
 But we can use the cat command to show the output (stdout) from the screen. Download the converted download.dat from Cyberchef, we can then review it the terminal:
-![[Pasted image 20240830110537.png]]
+![](images/Pasted%20image%2020240830110537.png)
 Well, the root user has shaky hands. We guess the password is duplicatedly depicted to us, that it should be Q3Eddtdw3pMB: Use the password and su root from tomas shell, we compromise root:
-![[Pasted image 20240830110618.png]]
+![](images/Pasted%20image%2020240830110618.png)

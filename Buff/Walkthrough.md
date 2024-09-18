@@ -4,7 +4,7 @@ port scan
 	8080/tcp http
 
 web-content scan 
-![[Pasted image 20240906081926.png]]
+![](images/Pasted%20image%2020240906081926.png)
 	/license `GNU GENERAL PUBLIC LICENSE` 
 	/README.md would be interesting. `gym management system`
 By searching the exploit-db, we found:
@@ -157,7 +157,7 @@ Very simply, it opens a connect to the target on port 8888, it sends a buffer, a
 The buffer is made up of 1052 bytes of no-op (nop, padding), then the address of a push esp, ret gadget, some nops, the payload, and then some more filler.
 
 Without looking at the binary, this suggests that the stack before and after user input is read looks like this:
-![[Pasted image 20240906103027.png]]
+![](images/Pasted%20image%2020240906103027.png)
 
 Now when the function returns, it will go to to the gadget, which will push $esp to the stack (which will now be at the top of the nops before the payload), and then return, moving the instruction pointer, $eip, to the nops followed by the payload
 

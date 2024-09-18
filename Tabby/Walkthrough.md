@@ -45,7 +45,7 @@ And we can find the version of tomcat `Apache Tomcat/9.0.31 (Ubuntu)`
 `Important: Remote Code Execution via session persistence CVE-2020-9484`
 
 The user tomcat has admin-gui, but not manager-gui, which means I can’t access the manager webapp:
-![[Pasted image 20240909103238.png]]
+![](images/Pasted%20image%2020240909103238.png)
 
 The tomcat user did have another permission, manager-script. This is to allow access to the text-based web service located at /manager/text. There’s a list of commands here.
 

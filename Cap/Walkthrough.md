@@ -10,7 +10,7 @@ There are 3 pages `\capture \ip \netstat`
 but capture like a wireshark, and we have try it and redirect to `/data/1` not from `/data/0`
 
 This a tricky thing and we successfully get something interesting from that
-![[Pasted image 20240909092313.png]]We get the ftp credit `nathan:Buck3tH4TF0RM3!`
+![](images/Pasted%20image%2020240909092313.png)We get the ftp credit `nathan:Buck3tH4TF0RM3!`
 And also we can use this credit to ssh connect to the machine.
 
 When I come to find root shell, there is nothing could be used or exploited.

@@ -131,7 +131,7 @@ There’s a user named support with an interesting info field:
 I guess it would be the password of one of user.
 
 Looking at the Bloodhound data, support shows up there as a member of Remote Management Users:
-![[Pasted image 20240905125823.png]]
+![](images/Pasted%20image%2020240905125823.png)
 
 crackmapexec confirms:
 ```
@@ -147,7 +147,7 @@ Then we can get the user.txt
 
 3, shell as SYSTEM
 Looking at the Bloodhound data again, the support user is a member of the Shared Support Accounts group, which has GenericAll on the computer object, DC.SUPPORT.HTB:
-![[Pasted image 20240905130300.png]]
+![](images/Pasted%20image%2020240905130300.png)
 
 ```
 I’m going to abuse resource-based constrained delegation. First I’ll add a fake computer to the domain under my control. Then I can act as the DC to request Kerberos tickets for the fake computer giving the ability to impersonate other accounts, like Administrator. For this to work, I’ll need an authenticated user who can add machines to the domain (by default, any user can add up to 10). This is configured in the ms-ds-machineaccountquota attribute, which needs to be larger than 0. Finally, I need write privileges over a domain joined computer (which GenericALL on the DC gets me.)
@@ -163,7 +163,7 @@ Rubeus.exe (pre-compiled exes from SharpCollection)
 I’ll upload these and import the two PowerShell scripts into my session:
 
 I’ll need to know the administrator on DC, which Bloodhound tells me is administrator@support.htb:
-![[Pasted image 20240905132915.png]]
+![](images/Pasted%20image%2020240905132915.png)
 
 I’ll verify that users can add machines to the domain:
 ```

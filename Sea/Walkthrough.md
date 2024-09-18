@@ -4,7 +4,7 @@
 
 2,check the pages and web contents
 Firstly, we can use fuff to enumerate the survival urls
-![[Pasted image 20240813080552.png]]From that we can find something interesting:
+![](images/Pasted%20image%2020240813080552.png)From that we can find something interesting:
 But very sad, there is nothing useful for us.
 
 So let's check the virtual machine or hosts

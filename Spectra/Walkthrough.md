@@ -19,7 +19,7 @@ We can find `http://spectra.htb/main/wp-login.php` from `\main` but we don't hav
 Let's check `\testing`, then it would redirect to `\testing\index.php`
 
 But if we just check `\testing`, we would get the File Directory
-![[Pasted image 20240901110425.png]]
+![](images/Pasted%20image%2020240901110425.png)
 
 Then we can just check some interesting files.
 `\wp-config.php` and `\wp-config.php.save` would be useful.
@@ -49,7 +49,7 @@ Then we get the database credit `devtest:devteam01`
 Let's try to connect to the database, but very sadly we could not connect it even through we have the credit.
 
 Let's come to the page of website, 
-![[Pasted image 20240901111439.png]]
+![](images/Pasted%20image%2020240901111439.png)
 
 we can guess `# Author: administrator`
 
@@ -65,26 +65,26 @@ WordPress 5.4.2:
 
 Theme Edit - Fail 
 There are many ways to try to go from admin login on WP to code execution. The first one I tried was to edit a theme to include a webshell. Under Appearance -> Theme Editor I get access to all the theme pages. I loaded 404 Template, and added a check to the top of the page:
-![[Pasted image 20240901112411.png]]
+![](images/Pasted%20image%2020240901112411.png)
 
 When I save this, I can go to /main/wp-content/themes/twentytwenty/404.php to trigger it. However, when I try to save, it fails:
-![[Pasted image 20240901112432.png]]
+![](images/Pasted%20image%2020240901112432.png)
 
 This is a protection put in place to stop people from doing exactly what I’m trying to do.
 
 Edit Existing Plugin:
 On the Plugins tab, there are two existing plugins:
-![[Pasted image 20240901112658.png]]
+![](images/Pasted%20image%2020240901112658.png)
 
 I’ll click on the Plugin Editor (in the menu on the left), and it takes me to the editor with Akismet Anti-Spam loaded and akismet.php in the editor:
-![[Pasted image 20240901112711.png]]
+![](images/Pasted%20image%2020240901112711.png)
 
 I can find this plugin at `[WP root]/wp-content/plugins/[plugin name]/[filename]`:
 
 `curl http://spectra.htb/main/wp-content/plugins/akismet/akismet.php`
 
 I’ll add a bit of code at the top to make it a webshell only if the parameter 0xdf is there:
-![[Pasted image 20240901113922.png]]
+![](images/Pasted%20image%2020240901113922.png)
 
 `curl http://spectra.htb/main/wp-content/plugins/akismet/akismet.php?0xdf=id`
 
@@ -201,12 +201,12 @@ initctl is a command used in older Linux distributions that use the Upstart init
 ```
 As you can seen in figure 01 initctl own SUDO privileges. Usually initctl works with service configuration file located at /etc/init directory on linux servers. mmmmm. so What if we can inject malicious code into that services. Let’s try
 ```
-![[Pasted image 20240901115650.png]]
+![](images/Pasted%20image%2020240901115650.png)
 
 And we can check current status of the services using list command via initctl.
 
 Let’s try to inject a code which set SUID permission /bin/bash from that attack can takeover bash shell as root by modifying service “test” (which is customized service, does not come up as default job)
-![[Pasted image 20240901120143.png]]
+![](images/Pasted%20image%2020240901120143.png)
 
 `sudo /sbin/initctl start test`
 
