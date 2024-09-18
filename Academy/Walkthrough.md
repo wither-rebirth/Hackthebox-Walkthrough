@@ -16,7 +16,7 @@ This time we gonna try to use burp to catch the package of response.
 The submitted information is very funny
 `uid=wither&password=1234567&confirm=1234567&roleid=0`
 If we change the roleid to 1, we can create a admin account for us.
-![[Pasted image 20240903090732.png]]
+![](Pasted%20image%2020240903090732.png)
 
 In this place we get another sub-domain `dev-staging-01.academy.htb`
 
@@ -39,7 +39,7 @@ The various logs above suggest this is running the Laravel PHP framework.
 
 This service is `Laravel PHP framework` , let's check the vulnerability of that.
 `PHP Laravel Framework 5.5.40 / 5.6.x < 5.6.30 - token Unserialize Remote Command Execution`
-![[Pasted image 20240903091836.png]]
+![](Pasted%20image%2020240903091836.png)
 
 Then we just need to use MSF to get the `www-data` shell.
 
@@ -69,7 +69,7 @@ By checking their directory, only user `cry0l1t3` is valid and luckily we can us
 In user `egre55` directory, there is a funny file
 `.sudo_as_admin_successful`
 and user `mrb3n` would also useful because of 
-![[Pasted image 20240903093355.png]]
+![Pasted image 20240903090732.png](Pasted image 20240903090732.png)
 
 When I check id 
 `uid=1002(cry0l1t3) gid=1002(cry0l1t3) groups=1002(cry0l1t3),4(adm)`
