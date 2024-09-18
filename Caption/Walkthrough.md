@@ -6,7 +6,7 @@ port scan
 By enumerate the web-contents, we find something interesting:
 for port 80, there is only the `Caption Portal Login` page, but we don't have any credit.
 for port 8080, we find a path `/root` we can find its role in `GitBucket`, but we could not find anything from that.
-![](Pasted%20image%2020240915034953.png)
+![](images/Pasted%20image%2020240915034953.png)
 
 Besides that ,we still don't have any credit to login.
 
