@@ -210,5 +210,6 @@ Of course, we can use the msf
 Then we can get the root shell.
 ![](images/Pasted%20image%2020240921105610.png)
 ![](images/Pasted%20image%2020240921105518.png)
+PS: remember do not write the virtual host name in the `RHOST` position, it would blocking reverse shells.
 
 Then we can get the root shell.
