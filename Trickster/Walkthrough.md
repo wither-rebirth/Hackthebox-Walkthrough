@@ -4,7 +4,7 @@ port scan
 	80/tcp http `Apache httpd 2.4.52`
 
 Page check
-![[Screenshot 2024-09-22 at 4.15.36 PM.png]]
+![](images/Pasted%20image%20202409220211111.png)
 By press the shop button, it would redirect to `http://shop.trickster.htb`
 
 ![](images/Pasted%20image%2020240922021800.png)
