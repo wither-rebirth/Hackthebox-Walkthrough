@@ -228,11 +228,11 @@ With my shell, I’ll run SharpHound to collect data for BloodHound. I’ve got 
 Then we need to download to our local machine.
 
 Under “Analysis”, I’ll click “Find Shorter Paths to Domain Admin”, and get the following graph:
-![[Pasted image 20240924094545.png]]
+![](images/Pasted%20image%2020240924094545.png)
 
 There’s two jumps needed to get from my current access as svc-alfresco to Administrator, who is in the Domain Admins group.
 Because my user is in Service Account, which is a member of Privileged IT Account, which is a member of Account Operators, it’s basically like my user is a member of Account Operators. And Account Operators has Generic All privilege on the Exchange Windows Permissions group. If I right click on the edge in Bloodhound, and select help, there’s an “Abuse Info” tab in the pop up that displays:
-![[Pasted image 20240924094741.png]]
+![](images/Pasted%20image%2020240924094741.png)
 
 This gives a full background as to how to abuse this, and if I scroll down, I see an example:
 `Add-DomainGroupMember -Identity 'Domain Admins' -Members 'harmj0y' -Credential $Cred`
