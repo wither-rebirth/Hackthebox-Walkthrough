@@ -44,7 +44,8 @@ We get the version `PrestaShop 8.1.5` and let's check its vulners.
 CVE-2024-34716 – The Deceptive PNG Trap: Breaking Down the PNG-Driven Chain from XSS to Remote Code Execution on PrestaShop (<=8.1.5)
 https://ayoubmokhtar.com/post/png_driven_chain_xss_to_remote_code_execution_prestashop_8.1.5_cve-2024-34716/
 ```
-`https://github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php `
+`https://github.com/pentestmonkey/php-reverse-shell/blob/master/php-reverse-shell.php`
+
 When we get the totally shit poc, we need to change it by ourselves.
 Then we can run it  and open the `http.server`
 ```
