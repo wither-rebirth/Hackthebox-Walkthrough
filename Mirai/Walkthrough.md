@@ -34,7 +34,7 @@ By use gobuster to enumerate the valid url
 ```
 
 So, `/admin` would be our target
-![[Pasted image 20241102094858.png]]
+![](images/Pasted%20image%2020241102094858.png)
 
 In the bottom of this page, we can find so many versions of services.
 `**Pi-hole Version** v3.1.4``
@@ -90,7 +90,7 @@ While not the intended method, strings will immediately reveal the flag if run o
 /dev/sdc、/dev/sdd 等：依次表示第三、第四块硬盘。
 ```
 
-![[Pasted image 20241102101443.png]]
+![](images/Pasted%20image%2020241102101443.png)
 
 
 
