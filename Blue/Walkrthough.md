@@ -16,5 +16,5 @@ Service Info: Host: HARIS-PC; OS: Windows; CPE: cpe:/o:microsoft:windows
 
 To be honest, when i see the version of this machine
 `Windows 7 Professional 7601 Service`
-I can certainly think about Eternal Blue.:)
+I can certainly think about Eternal Blue. :)
 
