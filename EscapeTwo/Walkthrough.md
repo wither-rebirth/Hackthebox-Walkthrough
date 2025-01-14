@@ -237,6 +237,34 @@ Administrator            ca_svc                   Guest
 krbtgt                   michael                  oscar
 rose                     ryan                     sql_svc
 The command completed with one or more errors.
+
+*Evil-WinRM* PS C:\Users\ryan\Documents> net user ryan /domain
+User name                    ryan
+Full Name                    Ryan Howard
+Comment
+User's comment
+Country/region code          000 (System Default)
+Account active               Yes
+Account expires              Never
+
+Password last set            6/8/2024 8:55:45 AM
+Password expires             Never
+Password changeable          6/9/2024 8:55:45 AM
+Password required            Yes
+User may change password     Yes
+
+Workstations allowed         All
+Logon script
+User profile
+Home directory
+Last logon                   1/13/2025 7:59:35 PM
+
+Logon hours allowed          All
+
+Local Group Memberships      *Remote Management Use
+Global Group memberships     *Management Department*Domain Users
+
+*Management Department That means we can change into other users by this management account.
 ```
 
 Exploits:
