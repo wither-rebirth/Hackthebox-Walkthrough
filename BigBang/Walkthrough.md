@@ -960,7 +960,7 @@ tcp        0      0 172.17.0.1:3306         0.0.0.0:*               LISTEN      
 tcp6       0      0 :::80                   :::*                    LISTEN      -                   
 tcp6       0      0 :::22                   :::*                    LISTEN      - 
 ```
-By using curl to check them, port 9090 seems like our target here.
+By using curl to check them, port 9090 and 3000 seems like our target here.
 ```
 shawking@bigbang:~$ curl 127.0.0.1:9090
 <!doctype html>
@@ -971,6 +971,7 @@ shawking@bigbang:~$ curl 127.0.0.1:9090
 shawking@bigbang:~$ curl 127.0.0.1:3000
 <a href="/login">Found</a>.
 
+/usr/bin/docker-proxy -proto tcp -host-ip 127.0.0.1 -host-port 3000 -container-ip 172.17.0.2 -container-port 3000 
 ```
 Let's continue to port forward to our local machine and check what is going on for this port.
 
@@ -985,7 +986,23 @@ We can use `grafana2hashcat` to help us crack the password
 
 Then we get the password of `George`
 `sha256:10000:NHVtZWJCSnVjdg==:foAYpCEO+66xLwEVWApHb+j5ik+braJyDmUmVIYMWduTV3sSIBwBUSVjddb4g/G42WA=:bigbang`
-We have known the service is `grafana`, and we can not login by get Method
+
+For port 3000, I found the service Grafana v11.0.0
+![](images/Pasted%20image%2020250130232913.png)
+And also I found the exploit script here
+`Grafana RCE exploit (CVE-2024-9264)`
+`https://github.com/z3k0sec/CVE-2024-9264-RCE-Exploit.git`
+But sadly after running the exploit script, nothing happened, I guess that's because authenticated Grafana user `developer` do not have Viewer permissions or higher.
+Maybe user `admin` would successfully exploit it.(But I can not crack the hash of admin)
+So I guess it's a rabbit hole here.
+
+Then we can su developer with this password, and there is `satellite-app.apk` file in the `/home/developer/android` directory.
+By using jadx-gui  to decompile java code, we can find the function`login` and `command`
+![](images/Pasted%20image%2020250130232154.png)
+![](images/Pasted%20image%2020250130232530.png)
+By reading the source code, we can find there is command injection from function `command`
+
+We have known the service is `satellite-app.apk`, and we can not login by get Method
 ![](images/Pasted%20image%2020250130021231.png)
 But we can use the Post method to login.
 ![](images/Pasted%20image%2020250130021447.png)
@@ -1018,6 +1035,8 @@ Content-Length: 57
 
 ```
 Forward it. You should get an access_token back.
+![](images/Pasted%20image%2020250130224318.png)
+
 After that go to http://127.0.0.1:9090/command in the Burp browser and edit the intercepted request again:
 ```
 POST /command HTTP/1.1
