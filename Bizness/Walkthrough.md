@@ -35,7 +35,7 @@ Nmap done: 1 IP address (1 host up) scanned in 49.65 seconds
 Add `bizness.htb` to our `/etc/hosts`
 # Page check
 **bizness.htb**
-![[Pasted image 20250716182011.png]]
+![](images/Pasted%20image%2020250716182011.png)
 Then I would use `ffuf` to enumerate the valid web contents
 ```
 ┌──(wither㉿localhost)-[~/Templates/htb-labs/Bizness]
@@ -68,7 +68,7 @@ index.html              [Status: 200, Size: 27200, Words: 9218, Lines: 523, Dura
 ```
 
 Let's check the page of `/control`
-![[Pasted image 20250716182326.png]]
+![](images/Pasted%20image%2020250716182326.png)
 We can find this name of the service `Apache Ofbiz` but it return us the error code `500 Internal error`
 
 So I guess there is another `url` to give us the path to login to the dashboard
@@ -81,7 +81,7 @@ I would like use `feroxbuster` to do the more wide enumerating.
 ```
 
 Then we can get the redirect to `https://bizness.htb/marketing/control/main` from `/marketing`
-![[Pasted image 20250716183607.png]]
+![](images/Pasted%20image%2020250716183607.png)
 From the bottom of the page, we can get the version of `Apache OFBiz`
 `Powered by [Apache OFBiz.](http://ofbiz.apache.org) Release 18.12`
 
@@ -291,10 +291,10 @@ The result of base64 encoding (this string also meets the character set of Base6
 After decoding, it may be: hash, or salt + hash
 ```
 If I just `from Base64` and `To Hex`, we can only get the length of 36 byte, that's not the length of `SHA-1` or any others
-![[Pasted image 20250716192907.png]]
+![](images/Pasted%20image%2020250716192907.png)
 Then let's strict the rule `A-Za-z0-9-_`
 If I look at the last section of my hash, it is `base64-encoded` (URL-safe alphabet based on the “_”), which decodes to 20 bytes (40 hex characters):
-![[Pasted image 20250716192027.png]]
+![](images/Pasted%20image%2020250716192027.png)
 The length is 40 bytes (`SHA-1`)
 
 Then let's try to crack it again `b8fd3f41a541a435857a8f3e751cc3a91c174362:d`
