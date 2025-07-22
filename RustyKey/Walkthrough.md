@@ -664,6 +664,7 @@ Info: Establishing connection to remote endpoint
 
 ```
 
+`Walkup` password: `f7a351e12f70cc177a1d5bd11b28ac26`
 # Description
 
 It is very suitable as a hard machine.
