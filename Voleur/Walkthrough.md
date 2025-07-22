@@ -676,6 +676,7 @@ Info: Establishing connection to remote endpoint
 
 ```
 
+`Walkup` password: `e656e07c56d831611b577b160b259ad2`
 # Description
 
 A typical Active Directory machine, with the main focus on using the Golden Ticket to collect information and synchronizing time with the DC server.
